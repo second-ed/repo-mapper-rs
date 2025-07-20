@@ -22,36 +22,37 @@ fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 mod core {
     use domain::filter_dir_entries;
-    use parsing::{list_files, GitIgnore, ReadMe};
+    use parsing::{list_files, Args, GitIgnore, ReadMe};
     use std::{collections::HashSet, path::PathBuf, process::ExitCode};
 
     use colored::Colorize;
 
-    pub fn main(scripts_root: String, readme_path: String, gitignore: String) -> ExitCode {
-        let scripts_root = PathBuf::from(scripts_root);
+    pub fn main(scripts_root: String, readme_path: String, gitignore_path: String) -> ExitCode {
+        let args = Args::new(scripts_root, readme_path, gitignore_path);
+
+        let allowed_exts: HashSet<&str> = ["py", "rs", "md"].iter().cloned().collect();
+        let ignore_dirs: HashSet<&str> = [".venv"].iter().cloned().collect();
+
         let print_fail_and_exit = |msg: String, e: std::io::Error| -> ExitCode {
             eprintln!("{} {}", msg.red().bold(), e);
             ExitCode::FAILURE
         };
 
-        let gitignore = match GitIgnore::parse(gitignore) {
+        let gitignore = match GitIgnore::parse(&args.gitignore_path) {
             Ok(contents) => contents,
             Err((msg, e)) => return print_fail_and_exit(msg, e),
         };
 
-        let readme = match ReadMe::parse(readme_path) {
+        let readme = match ReadMe::parse(&args.readme_path) {
             Ok(contents) => contents,
             Err((msg, e)) => return print_fail_and_exit(msg, e),
         };
 
-        let entries = list_files(&scripts_root);
-
-        let allowed_exts: HashSet<&str> = ["py", "rs", "md"].iter().cloned().collect();
-        let ignore_dirs: HashSet<&str> = [".venv"].iter().cloned().collect();
+        let entries = list_files(&args.scripts_root);
 
         dbg!(filter_dir_entries(
             entries,
-            &scripts_root,
+            &args.scripts_root,
             &allowed_exts,
             &ignore_dirs,
             true
@@ -61,8 +62,31 @@ mod core {
     }
 
     mod parsing {
-        use std::{fs, io, ops::Deref, path::Path};
+        use std::{
+            fs, io,
+            ops::Deref,
+            path::{Path, PathBuf},
+        };
         use walkdir::{DirEntry, WalkDir};
+
+        pub struct Args {
+            pub scripts_root: PathBuf,
+            pub readme_path: PathBuf,
+            pub gitignore_path: PathBuf,
+        }
+
+        impl Args {
+            pub fn new(scripts_root: String, readme_path: String, gitignore_path: String) -> Self {
+                let scripts_root = PathBuf::from(scripts_root);
+                let readme_path = PathBuf::from(readme_path);
+                let gitignore_path = PathBuf::from(gitignore_path);
+                Self {
+                    scripts_root,
+                    readme_path,
+                    gitignore_path,
+                }
+            }
+        }
 
         trait FileText: Sized {
             const EXPECTED_FILENAME: &'static str;
@@ -164,11 +188,7 @@ mod core {
     }
 
     mod domain {
-        use std::{
-            collections::HashSet,
-            ffi,
-            path::{Path, PathBuf},
-        };
+        use std::{collections::HashSet, ffi, path::PathBuf};
         use walkdir::DirEntry;
 
         pub fn filter_dir_entries(
