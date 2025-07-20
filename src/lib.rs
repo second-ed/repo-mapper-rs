@@ -345,6 +345,8 @@ mod core {
                 }
             }
 
+            let root_parent = root.parent().unwrap_or(root);
+
             paths
                 .iter()
                 .filter(|e| !ignore_hidden || !_is_hidden(e))
@@ -352,7 +354,7 @@ mod core {
                 .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
                 .filter_map(|e| {
                     e.path()
-                        .strip_prefix(root.parent()?)
+                        .strip_prefix(root_parent)
                         .ok()
                         .map(|p| p.to_owned())
                 })
