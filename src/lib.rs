@@ -37,7 +37,9 @@ fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 mod core {
     use domain::filter_dir_entries;
     use parsing::{list_files, Args, GitIgnore, ReadMe};
-    use std::{collections::HashSet, process::ExitCode};
+    use std::process::ExitCode;
+
+    use crate::core::domain::FileTree;
 
     pub fn main(
         scripts_root: String,
@@ -61,13 +63,19 @@ mod core {
 
         let entries = list_files(&args.scripts_root);
 
-        dbg!(filter_dir_entries(
+        let paths = filter_dir_entries(
             entries,
             &args.scripts_root,
             &args.allowed_exts,
             &args.ignore_dirs,
-            args.ignore_hidden
-        ));
+            args.ignore_hidden,
+        );
+
+        let mut tree = FileTree::new();
+        tree.create_map(paths);
+
+        dbg!(tree.nodes);
+
         dbg!(readme);
         dbg!(gitignore);
 
@@ -106,8 +114,10 @@ mod core {
                 let scripts_root = PathBuf::from(scripts_root);
                 let readme_path = PathBuf::from(readme_path);
                 let gitignore_path = PathBuf::from(gitignore_path);
+
                 let allowed_exts: HashSet<String> = allowed_exts.into_iter().collect();
                 let ignore_dirs: HashSet<String> = ignore_dirs.into_iter().collect();
+
                 Self {
                     scripts_root,
                     readme_path,
@@ -228,8 +238,40 @@ mod core {
     }
 
     mod domain {
+        use std::collections::HashMap;
+        use std::path::Path;
         use std::{collections::HashSet, ffi, path::PathBuf};
         use walkdir::DirEntry;
+
+        #[derive(Debug)]
+        pub struct FileTree {
+            pub nodes: HashMap<String, FileTree>,
+        }
+
+        impl FileTree {
+            pub fn new() -> Self {
+                FileTree {
+                    nodes: HashMap::new(),
+                }
+            }
+
+            fn insert(&mut self, path: &Path) {
+                let parts = path
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().to_string());
+
+                let mut node = self;
+                for part in parts {
+                    node = node.nodes.entry(part).or_insert_with(FileTree::new);
+                }
+            }
+
+            pub fn create_map(&mut self, paths: Vec<PathBuf>) {
+                for path in paths {
+                    self.insert(&path);
+                }
+            }
+        }
 
         pub fn filter_dir_entries(
             paths: Vec<DirEntry>,
@@ -237,13 +279,18 @@ mod core {
             allowed_exts: &HashSet<String>,
             ignore_dirs: &HashSet<String>,
             ignore_hidden: bool,
-        ) -> Vec<DirEntry> {
+        ) -> Vec<PathBuf> {
             paths
                 .iter()
                 .filter(|e| !ignore_hidden || !is_hidden(e))
                 .filter(|e| is_allowed_ext(e, allowed_exts))
                 .filter(|e| !is_ignored_dir(e, root, ignore_dirs))
-                .map(|e| e.to_owned())
+                .filter_map(|e| {
+                    e.path()
+                        .strip_prefix(root.parent()?)
+                        .ok()
+                        .map(|p| p.to_owned())
+                })
                 .collect()
         }
 
