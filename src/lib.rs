@@ -74,7 +74,9 @@ mod core {
         let mut tree = FileTree::new();
         tree.create_map(paths);
 
-        dbg!(tree.nodes);
+        dbg!(&tree.nodes);
+
+        println!("{}", tree.render());
 
         dbg!(readme);
         dbg!(gitignore);
@@ -271,6 +273,30 @@ mod core {
                     self.insert(&path);
                 }
             }
+
+            pub fn render(&self) -> String {
+                fn _walk(tree: &HashMap<String, FileTree>, prefix: String, out: &mut Vec<String>) {
+                    let mut items: Vec<_> = tree.iter().collect();
+
+                    items.sort_by_key(|(name, node)| (node.nodes.is_empty(), name.to_owned()));
+
+                    for (i, (name, _)) in items.iter().enumerate() {
+                        let is_last = i == items.len() - 1;
+                        let connector = if is_last { "└── " } else { "├── " };
+                        out.push(format!("{prefix}{connector}{name}"));
+
+                        if let Some(subtree) = tree.get(*name) {
+                            let new_prefix =
+                                format!("{prefix}{}", if is_last { "    " } else { "│   " });
+                            _walk(&subtree.nodes, new_prefix, out);
+                        }
+                    }
+                }
+
+                let mut out = Vec::new();
+                _walk(&self.nodes, String::new(), &mut out);
+                out.join("\n")
+            }
         }
 
         pub fn filter_dir_entries(
@@ -280,11 +306,50 @@ mod core {
             ignore_dirs: &HashSet<String>,
             ignore_hidden: bool,
         ) -> Vec<PathBuf> {
+            fn _is_hidden(entry: &DirEntry) -> bool {
+                entry
+                    .file_name()
+                    .to_str()
+                    .map(|s| s.starts_with("."))
+                    .unwrap_or(false)
+            }
+
+            fn _is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<String>) -> bool {
+                if allowed_exts.is_empty() {
+                    return true;
+                }
+                entry
+                    .path()
+                    .extension()
+                    .and_then(ffi::OsStr::to_str)
+                    .map(|ext| allowed_exts.contains(ext))
+                    .unwrap_or(false)
+            }
+
+            fn _is_ignored_dir(
+                entry: &DirEntry,
+                root: &PathBuf,
+                ignore_dirs: &HashSet<String>,
+            ) -> bool {
+                if ignore_dirs.is_empty() {
+                    return true;
+                }
+                match entry.path().strip_prefix(root) {
+                    Ok(stripped) => stripped.ancestors().any(|anc| {
+                        anc.file_name()
+                            .and_then(|name| name.to_str())
+                            .map(|name| ignore_dirs.contains(name))
+                            .unwrap_or(false)
+                    }),
+                    Err(_) => true,
+                }
+            }
+
             paths
                 .iter()
-                .filter(|e| !ignore_hidden || !is_hidden(e))
-                .filter(|e| is_allowed_ext(e, allowed_exts))
-                .filter(|e| !is_ignored_dir(e, root, ignore_dirs))
+                .filter(|e| !ignore_hidden || !_is_hidden(e))
+                .filter(|e| _is_allowed_ext(e, allowed_exts))
+                .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
                 .filter_map(|e| {
                     e.path()
                         .strip_prefix(root.parent()?)
@@ -292,41 +357,6 @@ mod core {
                         .map(|p| p.to_owned())
                 })
                 .collect()
-        }
-
-        fn is_hidden(entry: &DirEntry) -> bool {
-            entry
-                .file_name()
-                .to_str()
-                .map(|s| s.starts_with("."))
-                .unwrap_or(false)
-        }
-
-        fn is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<String>) -> bool {
-            if allowed_exts.is_empty() {
-                return true;
-            }
-            entry
-                .path()
-                .extension()
-                .and_then(ffi::OsStr::to_str)
-                .map(|ext| allowed_exts.contains(ext))
-                .unwrap_or(false)
-        }
-
-        fn is_ignored_dir(entry: &DirEntry, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
-            if ignore_dirs.is_empty() {
-                return true;
-            }
-            match entry.path().strip_prefix(root) {
-                Ok(stripped) => stripped.ancestors().any(|anc| {
-                    anc.file_name()
-                        .and_then(|name| name.to_str())
-                        .map(|name| ignore_dirs.contains(name))
-                        .unwrap_or(false)
-                }),
-                Err(_) => true,
-            }
         }
     }
 }
