@@ -5,10 +5,24 @@ use pyo3::prelude::*;
 use crate::core::main;
 
 #[pyfunction]
-fn py_main(scripts_root: String, readme_path: String, gitignore_path: String) -> PyResult<i8> {
-    match main(scripts_root, readme_path, gitignore_path) {
-        ExitCode::SUCCESS => Ok(0),
-        ExitCode::FAILURE => Ok(1),
+fn py_main(
+    scripts_root: String,
+    readme_path: String,
+    gitignore_path: String,
+    allowed_exts: Vec<String>,
+    ignore_dirs: Vec<String>,
+    ignore_hidden: bool,
+) -> PyResult<i8> {
+    match main(
+        scripts_root,
+        readme_path,
+        gitignore_path,
+        allowed_exts,
+        ignore_dirs,
+        ignore_hidden,
+    ) {
+        Ok(ExitCode::SUCCESS) => Ok(0),
+        Err(ExitCode::FAILURE) => Ok(1),
         _ => Ok(-1),
     }
 }
@@ -23,49 +37,51 @@ fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 mod core {
     use domain::filter_dir_entries;
     use parsing::{list_files, Args, GitIgnore, ReadMe};
-    use std::{collections::HashSet, path::PathBuf, process::ExitCode};
+    use std::{collections::HashSet, process::ExitCode};
 
-    use colored::Colorize;
+    pub fn main(
+        scripts_root: String,
+        readme_path: String,
+        gitignore_path: String,
+        allowed_exts: Vec<String>,
+        ignore_dirs: Vec<String>,
+        ignore_hidden: bool,
+    ) -> Result<ExitCode, ExitCode> {
+        let args = Args::new(
+            scripts_root,
+            readme_path,
+            gitignore_path,
+            allowed_exts,
+            ignore_dirs,
+            ignore_hidden,
+        );
 
-    pub fn main(scripts_root: String, readme_path: String, gitignore_path: String) -> ExitCode {
-        let args = Args::new(scripts_root, readme_path, gitignore_path);
-
-        let allowed_exts: HashSet<&str> = ["py", "rs", "md"].iter().cloned().collect();
-        let ignore_dirs: HashSet<&str> = [".venv"].iter().cloned().collect();
-
-        let print_fail_and_exit = |msg: String, e: std::io::Error| -> ExitCode {
-            eprintln!("{} {}", msg.red().bold(), e);
-            ExitCode::FAILURE
-        };
-
-        let gitignore = match GitIgnore::parse(&args.gitignore_path) {
-            Ok(contents) => contents,
-            Err((msg, e)) => return print_fail_and_exit(msg, e),
-        };
-
-        let readme = match ReadMe::parse(&args.readme_path) {
-            Ok(contents) => contents,
-            Err((msg, e)) => return print_fail_and_exit(msg, e),
-        };
+        let gitignore = GitIgnore::parse(&args.gitignore_path)?;
+        let readme = ReadMe::parse(&args.readme_path)?;
 
         let entries = list_files(&args.scripts_root);
 
         dbg!(filter_dir_entries(
             entries,
             &args.scripts_root,
-            &allowed_exts,
-            &ignore_dirs,
-            true
+            &args.allowed_exts,
+            &args.ignore_dirs,
+            args.ignore_hidden
         ));
+        dbg!(readme);
+        dbg!(gitignore);
 
-        ExitCode::SUCCESS
+        Ok(ExitCode::SUCCESS)
     }
 
     mod parsing {
+        use colored::Colorize;
         use std::{
-            fs, io,
+            collections::HashSet,
+            fs,
             ops::Deref,
             path::{Path, PathBuf},
+            process::ExitCode,
         };
         use walkdir::{DirEntry, WalkDir};
 
@@ -73,17 +89,32 @@ mod core {
             pub scripts_root: PathBuf,
             pub readme_path: PathBuf,
             pub gitignore_path: PathBuf,
+            pub allowed_exts: HashSet<String>,
+            pub ignore_dirs: HashSet<String>,
+            pub ignore_hidden: bool,
         }
 
         impl Args {
-            pub fn new(scripts_root: String, readme_path: String, gitignore_path: String) -> Self {
+            pub fn new(
+                scripts_root: String,
+                readme_path: String,
+                gitignore_path: String,
+                allowed_exts: Vec<String>,
+                ignore_dirs: Vec<String>,
+                ignore_hidden: bool,
+            ) -> Self {
                 let scripts_root = PathBuf::from(scripts_root);
                 let readme_path = PathBuf::from(readme_path);
                 let gitignore_path = PathBuf::from(gitignore_path);
+                let allowed_exts: HashSet<String> = allowed_exts.into_iter().collect();
+                let ignore_dirs: HashSet<String> = ignore_dirs.into_iter().collect();
                 Self {
                     scripts_root,
                     readme_path,
                     gitignore_path,
+                    allowed_exts,
+                    ignore_dirs,
+                    ignore_hidden,
                 }
             }
         }
@@ -93,7 +124,7 @@ mod core {
 
             fn from_string(s: String) -> Self;
 
-            fn parse(path: impl AsRef<Path>) -> Result<Self, (String, io::Error)> {
+            fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
                 let path = path.as_ref().to_path_buf();
                 let basename = path
                     .file_name()
@@ -101,22 +132,31 @@ mod core {
                     .unwrap_or("Invalid basename");
 
                 if basename != Self::EXPECTED_FILENAME {
-                    return Err((
+                    eprintln!(
+                        "{}",
                         format!(
                             "Invalid `{}` basename: `{}`",
                             Self::EXPECTED_FILENAME,
                             basename
-                        ),
-                        io::Error::new(
-                            io::ErrorKind::InvalidInput,
-                            format!("Expected `{}`", Self::EXPECTED_FILENAME),
-                        ),
-                    ));
+                        )
+                        .red()
+                        .bold(),
+                    );
+                    return Err(ExitCode::FAILURE);
                 }
 
                 match fs::read_to_string(&path) {
                     Ok(contents) => Ok(Self::from_string(contents)),
-                    Err(e) => Err((format!("Failed to parse `{}`", Self::EXPECTED_FILENAME), e)),
+                    Err(e) => {
+                        eprintln!(
+                            "{} {}",
+                            format!("Failed to parse `{}`", Self::EXPECTED_FILENAME)
+                                .red()
+                                .bold(),
+                            e
+                        );
+                        Err(ExitCode::FAILURE)
+                    }
                 }
             }
         }
@@ -133,7 +173,7 @@ mod core {
         }
 
         impl GitIgnore {
-            pub fn parse(path: impl AsRef<Path>) -> Result<Self, (String, io::Error)> {
+            pub fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
                 <Self as FileText>::parse(path)
             }
 
@@ -166,7 +206,7 @@ mod core {
         }
 
         impl ReadMe {
-            pub fn parse(path: impl AsRef<Path>) -> Result<Self, (String, io::Error)> {
+            pub fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
                 <Self as FileText>::parse(path)
             }
         }
@@ -194,8 +234,8 @@ mod core {
         pub fn filter_dir_entries(
             paths: Vec<DirEntry>,
             root: &PathBuf,
-            allowed_exts: &HashSet<&str>,
-            ignore_dirs: &HashSet<&str>,
+            allowed_exts: &HashSet<String>,
+            ignore_dirs: &HashSet<String>,
             ignore_hidden: bool,
         ) -> Vec<DirEntry> {
             paths
@@ -215,7 +255,7 @@ mod core {
                 .unwrap_or(false)
         }
 
-        fn is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<&str>) -> bool {
+        fn is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<String>) -> bool {
             if allowed_exts.is_empty() {
                 return true;
             }
@@ -227,7 +267,7 @@ mod core {
                 .unwrap_or(false)
         }
 
-        fn is_ignored_dir(entry: &DirEntry, root: &PathBuf, ignore_dirs: &HashSet<&str>) -> bool {
+        fn is_ignored_dir(entry: &DirEntry, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
             if ignore_dirs.is_empty() {
                 return true;
             }
