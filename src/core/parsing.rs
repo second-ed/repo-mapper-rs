@@ -142,7 +142,7 @@ impl Deref for GitIgnore {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct ReadMe(pub(crate) String);
+pub struct ReadMe(String);
 
 impl FileText for ReadMe {
     const EXPECTED_FILENAME: &'static str = "README.md";
@@ -159,6 +159,17 @@ impl ReadMe {
 
     pub fn write(&self, path: &Path) -> Result<(), io::Error> {
         fs::write(path, &self.0)
+    }
+
+    pub fn update_readme(&self, repo_map: String) -> ReadMe {
+        let pattern = Regex::new(r"(?s)(?m)^# Repo map\n```.*?^::\n```").expect("valid regex");
+
+        let updated = if pattern.is_match(&self.0) {
+            pattern.replace(&self.0, repo_map).into_owned()
+        } else {
+            format!("{}\n\n{}", self.0, repo_map)
+        };
+        ReadMe(updated)
     }
 }
 

@@ -7,8 +7,6 @@ use std::{
 };
 use walkdir::DirEntry;
 
-use crate::core::parsing::ReadMe;
-
 #[derive(Debug)]
 pub struct FileTree {
     pub nodes: HashMap<String, FileTree>,
@@ -129,15 +127,4 @@ pub fn filter_entries(
         .filter_map(|e| e.path().strip_prefix(root).ok().map(|p| p.to_owned()))
         .filter(|p| !_is_gitignored(p, gitignored_patterns))
         .collect()
-}
-
-pub fn update_readme(readme: &ReadMe, repo_map: String) -> ReadMe {
-    let pattern = Regex::new(r"(?s)(?m)^# Repo map\n```.*?^::\n```").expect("valid regex");
-
-    let updated = if pattern.is_match(&readme.0) {
-        pattern.replace(&readme.0, repo_map).into_owned()
-    } else {
-        format!("{}\n\n{}", readme.0, repo_map)
-    };
-    ReadMe(updated)
 }

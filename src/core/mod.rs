@@ -4,7 +4,7 @@ pub mod parsing;
 use colored::Colorize;
 use std::process::ExitCode;
 
-use domain::{filter_entries, update_readme, FileTree};
+use domain::{filter_entries, FileTree};
 use parsing::{list_files, Args, GitIgnore, ReadMe};
 
 pub fn main(
@@ -37,7 +37,7 @@ pub fn main(
         args.ignore_hidden,
     );
     let tree = FileTree::new().create_map(paths);
-    let modified_readme = update_readme(&readme, tree.render());
+    let modified_readme = readme.update_readme(tree.render());
 
     if modified_readme != readme {
         if let Err(e) = modified_readme.write(&args.readme_path) {
