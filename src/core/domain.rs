@@ -28,7 +28,7 @@ impl FileTree {
 
         let mut node = self;
         for part in parts {
-            node = node.nodes.entry(part).or_insert_with(FileTree::new);
+            node = node.nodes.entry(part).or_default();
         }
     }
 
@@ -60,6 +60,12 @@ impl FileTree {
         let mut out = Vec::new();
         _walk(&self.nodes, String::new(), &mut out);
         format!("# Repo map\n```\n{}\n::\n```", out.join("\n"))
+    }
+}
+
+impl Default for FileTree {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
