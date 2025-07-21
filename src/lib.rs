@@ -35,7 +35,7 @@ fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 mod core {
-    use domain::filter_dir_entries;
+    use domain::filter_entries;
     use parsing::{list_files, Args, GitIgnore, ReadMe};
     use std::process::ExitCode;
 
@@ -58,34 +58,31 @@ mod core {
             ignore_hidden,
         );
 
-        let gitignore = GitIgnore::parse(&args.gitignore_path)?;
         let readme = ReadMe::parse(&args.readme_path)?;
+        let gitignore = GitIgnore::parse(&args.gitignore_path)?;
 
         let entries = list_files(&args.scripts_root);
 
-        let paths = filter_dir_entries(
+        // domain stuff
+        let paths = filter_entries(
             entries,
             &args.scripts_root,
             &args.allowed_exts,
             &args.ignore_dirs,
+            &gitignore.parse_lines(),
             args.ignore_hidden,
         );
 
-        let mut tree = FileTree::new();
-        tree.create_map(paths);
-
-        dbg!(&tree.nodes);
+        let tree = FileTree::new().create_map(paths);
 
         println!("{}", tree.render());
-
-        dbg!(readme);
-        dbg!(gitignore);
 
         Ok(ExitCode::SUCCESS)
     }
 
     mod parsing {
         use colored::Colorize;
+        use regex::Regex;
         use std::{
             collections::HashSet,
             fs,
@@ -189,11 +186,32 @@ mod core {
                 <Self as FileText>::parse(path)
             }
 
-            pub fn process_lines(&self) -> Vec<String> {
+            pub fn parse_lines(&self) -> Vec<Regex> {
                 self.0
                     .lines()
                     .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
-                    .map(str::to_string)
+                    .filter_map(|pattern| {
+                        let mut regex_str = String::new();
+
+                        regex_str.push_str("(^|/)");
+
+                        for c in pattern.chars() {
+                            match c {
+                                '*' => regex_str.push_str("[^/]*"),
+                                '?' => regex_str.push('.'),
+                                '.' => regex_str.push_str(r"\."),
+                                _ => regex_str.push(c),
+                            }
+                        }
+
+                        if pattern.ends_with('/') {
+                            regex_str.push_str("(.*)?$");
+                        } else {
+                            regex_str.push('$');
+                        }
+
+                        Regex::new(&regex_str).ok()
+                    })
                     .collect()
             }
         }
@@ -240,9 +258,12 @@ mod core {
     }
 
     mod domain {
-        use std::collections::HashMap;
-        use std::path::Path;
-        use std::{collections::HashSet, ffi, path::PathBuf};
+        use regex::Regex;
+        use std::{
+            collections::{HashMap, HashSet},
+            ffi,
+            path::{Path, PathBuf},
+        };
         use walkdir::DirEntry;
 
         #[derive(Debug)]
@@ -268,10 +289,11 @@ mod core {
                 }
             }
 
-            pub fn create_map(&mut self, paths: Vec<PathBuf>) {
+            pub fn create_map(mut self, paths: Vec<PathBuf>) -> Self {
                 for path in paths {
                     self.insert(&path);
                 }
+                self
             }
 
             pub fn render(&self) -> String {
@@ -299,13 +321,15 @@ mod core {
             }
         }
 
-        pub fn filter_dir_entries(
+        pub fn filter_entries(
             paths: Vec<DirEntry>,
             root: &PathBuf,
             allowed_exts: &HashSet<String>,
             ignore_dirs: &HashSet<String>,
+            gitignored_patterns: &[Regex],
             ignore_hidden: bool,
         ) -> Vec<PathBuf> {
+            #[inline(always)]
             fn _is_hidden(entry: &DirEntry) -> bool {
                 entry
                     .file_name()
@@ -314,6 +338,7 @@ mod core {
                     .unwrap_or(false)
             }
 
+            #[inline(always)]
             fn _is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<String>) -> bool {
                 if allowed_exts.is_empty() {
                     return true;
@@ -326,6 +351,7 @@ mod core {
                     .unwrap_or(false)
             }
 
+            #[inline(always)]
             fn _is_ignored_dir(
                 entry: &DirEntry,
                 root: &PathBuf,
@@ -345,19 +371,19 @@ mod core {
                 }
             }
 
-            let root_parent = root.parent().unwrap_or(root);
+            #[inline(always)]
+            fn _is_gitignored(path: &Path, patterns: &[Regex]) -> bool {
+                let rel_str = path.to_string_lossy();
+                patterns.iter().any(|re| re.is_match(&rel_str))
+            }
 
             paths
                 .iter()
                 .filter(|e| !ignore_hidden || !_is_hidden(e))
                 .filter(|e| _is_allowed_ext(e, allowed_exts))
                 .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
-                .filter_map(|e| {
-                    e.path()
-                        .strip_prefix(root_parent)
-                        .ok()
-                        .map(|p| p.to_owned())
-                })
+                .filter_map(|e| e.path().strip_prefix(root).ok().map(|p| p.to_owned()))
+                .filter(|p| !_is_gitignored(p, gitignored_patterns))
                 .collect()
         }
     }
