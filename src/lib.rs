@@ -35,11 +35,11 @@ fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 mod core {
-    use domain::filter_entries;
-    use parsing::{list_files, Args, GitIgnore, ReadMe};
+    use colored::Colorize;
     use std::process::ExitCode;
 
-    use crate::core::domain::FileTree;
+    use crate::core::domain::{filter_entries, update_readme, FileTree};
+    use crate::core::parsing::{list_files, Args, GitIgnore, ReadMe};
 
     pub fn main(
         scripts_root: String,
@@ -60,10 +60,8 @@ mod core {
 
         let readme = ReadMe::parse(&args.readme_path)?;
         let gitignore = GitIgnore::parse(&args.gitignore_path)?;
-
         let entries = list_files(&args.scripts_root);
 
-        // domain stuff
         let paths = filter_entries(
             entries,
             &args.scripts_root,
@@ -72,11 +70,18 @@ mod core {
             &gitignore.parse_lines(),
             args.ignore_hidden,
         );
-
         let tree = FileTree::new().create_map(paths);
+        let modified_readme = update_readme(&readme, tree.render());
 
-        println!("{}", tree.render());
-
+        if modified_readme != readme {
+            if let Err(e) = modified_readme.write(&args.readme_path) {
+                eprintln!("{} {}", "Failed to write README file: ".red().bold(), e);
+                return Err(ExitCode::FAILURE);
+            };
+            println!("{}", "Modified README.md".yellow().bold());
+            return Err(ExitCode::FAILURE);
+        }
+        println!("{}", "Nothing to modify".green().bold());
         Ok(ExitCode::SUCCESS)
     }
 
@@ -85,7 +90,7 @@ mod core {
         use regex::Regex;
         use std::{
             collections::HashSet,
-            fs,
+            fs, io,
             ops::Deref,
             path::{Path, PathBuf},
             process::ExitCode,
@@ -225,7 +230,7 @@ mod core {
         }
 
         #[derive(Debug, Eq, PartialEq)]
-        pub struct ReadMe(String);
+        pub struct ReadMe(pub(crate) String);
 
         impl FileText for ReadMe {
             const EXPECTED_FILENAME: &'static str = "README.md";
@@ -238,6 +243,10 @@ mod core {
         impl ReadMe {
             pub fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
                 <Self as FileText>::parse(path)
+            }
+
+            pub fn write(&self, path: &Path) -> Result<(), io::Error> {
+                fs::write(path, &self.0)
             }
         }
 
@@ -258,6 +267,7 @@ mod core {
     }
 
     mod domain {
+        use rayon::prelude::*;
         use regex::Regex;
         use std::{
             collections::{HashMap, HashSet},
@@ -265,6 +275,8 @@ mod core {
             path::{Path, PathBuf},
         };
         use walkdir::DirEntry;
+
+        use crate::core::parsing::ReadMe;
 
         #[derive(Debug)]
         pub struct FileTree {
@@ -317,12 +329,12 @@ mod core {
 
                 let mut out = Vec::new();
                 _walk(&self.nodes, String::new(), &mut out);
-                out.join("\n")
+                format!("# Repo map\n```\n{}\n::\n```", out.join("\n"))
             }
         }
 
         pub fn filter_entries(
-            paths: Vec<DirEntry>,
+            entries: Vec<DirEntry>,
             root: &PathBuf,
             allowed_exts: &HashSet<String>,
             ignore_dirs: &HashSet<String>,
@@ -377,14 +389,25 @@ mod core {
                 patterns.iter().any(|re| re.is_match(&rel_str))
             }
 
-            paths
-                .iter()
+            entries
+                .into_par_iter()
                 .filter(|e| !ignore_hidden || !_is_hidden(e))
                 .filter(|e| _is_allowed_ext(e, allowed_exts))
                 .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
                 .filter_map(|e| e.path().strip_prefix(root).ok().map(|p| p.to_owned()))
                 .filter(|p| !_is_gitignored(p, gitignored_patterns))
                 .collect()
+        }
+
+        pub fn update_readme(readme: &ReadMe, repo_map: String) -> ReadMe {
+            let pattern = Regex::new(r"(?s)(?m)^# Repo map\n```.*?^::\n```").expect("valid regex");
+
+            let updated = if pattern.is_match(&readme.0) {
+                pattern.replace(&readme.0, repo_map).into_owned()
+            } else {
+                format!("{}\n\n{}", readme.0, repo_map)
+            };
+            ReadMe(updated)
         }
     }
 }
