@@ -96,7 +96,7 @@ pub fn filter_paths(
     #[inline(always)]
     fn _is_ignored_dir(path: &Path, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
         if ignore_dirs.is_empty() {
-            return true;
+            return false;
         }
         match path.strip_prefix(root) {
             Ok(stripped) => stripped.ancestors().any(|anc| {
@@ -130,7 +130,7 @@ mod tests {
     use regex::Regex;
     use std::{collections::HashSet, path::PathBuf};
 
-    use super::filter_paths;
+    use super::{filter_paths, FileTree};
 
     fn get_mock_repo_vec() -> Vec<&'static str> {
         vec![
@@ -172,7 +172,7 @@ mod tests {
 
         let root = PathBuf::from("user/root/repo");
         let allowed_exts = create_hashset(vec!["py", "rs", "toml"]);
-        let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
+        let ignore_dirs = create_hashset(Vec::new());
         let gitignored_patterns =
             create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
 
@@ -180,6 +180,8 @@ mod tests {
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
             "python/cli/__init__.py",
+            ".venv/site-packages/__init__.py",
+            "scrap/some_file.rs",
             "Cargo.toml",
         ]);
 
@@ -200,14 +202,17 @@ mod tests {
         let paths = create_pathbuf_vec(get_mock_repo_vec());
 
         let root = PathBuf::from("user/root/repo");
-        let allowed_exts = create_hashset(vec!["rs", "toml"]);
+        let allowed_exts = create_hashset(Vec::new());
         let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
         let gitignored_patterns =
             create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
 
         let expected_result: Vec<PathBuf> = create_pathbuf_vec(vec![
+            ".github/workflows/ci.yaml",
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
+            "python/cli/__init__.py",
+            "README.md",
             "Cargo.toml",
             ".hidden.toml",
         ]);
@@ -220,6 +225,45 @@ mod tests {
             &gitignored_patterns,
             false,
         );
+
+        assert_eq!(actual_result, expected_result);
+    }
+
+    #[test]
+    fn test_file_tree() {
+        let paths = create_pathbuf_vec(vec![
+            ".github/workflows/ci.yaml",
+            "src/core/some_file.rs",
+            "src/core/some_file2.rs",
+            "python/cli/__init__.py",
+            "README.md",
+            "Cargo.toml",
+        ]);
+
+        let expected_result = [
+            "# Repo map",
+            "```",
+            "├── .github",
+            "│   └── workflows",
+            "│       └── ci.yaml",
+            "├── python",
+            "│   └── cli",
+            "│       └── __init__.py",
+            "├── src",
+            "│   └── core",
+            "│       ├── some_file.rs",
+            "│       └── some_file2.rs",
+            "├── Cargo.toml",
+            "└── README.md",
+            "::",
+            "```",
+        ]
+        .into_iter()
+        .map(str::to_string)
+        .collect::<Vec<String>>()
+        .join("\n");
+
+        let actual_result = FileTree::new().create_map(paths).render();
 
         assert_eq!(actual_result, expected_result);
     }
