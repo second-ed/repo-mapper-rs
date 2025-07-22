@@ -132,16 +132,8 @@ mod tests {
 
     use super::filter_paths;
 
-    #[test]
-    fn test_filter_paths() {
-        fn create_hashset(inp_vec: Vec<&str>) -> HashSet<String> {
-            inp_vec
-                .into_iter()
-                .map(str::to_string)
-                .collect::<HashSet<_>>()
-        }
-
-        let paths = [
+    fn get_mock_repo_vec() -> Vec<&'static str> {
+        vec![
             "user/root/repo/.github/workflows/ci.yaml",
             "user/root/repo/src/core/some_file.rs",
             "user/root/repo/src/core/some_file2.rs",
@@ -152,27 +144,44 @@ mod tests {
             "user/root/repo/.pytest_cache/some_cache.py",
             "user/root/repo/target/some_build.rs",
             "user/root/repo/Cargo.toml",
+            "user/root/repo/.hidden.toml",
         ]
-        .iter()
-        .map(PathBuf::from)
-        .collect();
+    }
+
+    fn create_pathbuf_vec(inp_vec: Vec<&str>) -> Vec<PathBuf> {
+        inp_vec.iter().map(PathBuf::from).collect()
+    }
+
+    fn create_hashset(inp_vec: Vec<&str>) -> HashSet<String> {
+        inp_vec
+            .into_iter()
+            .map(str::to_string)
+            .collect::<HashSet<_>>()
+    }
+
+    fn create_gitignore_patterns(inp_vec: Vec<&str>) -> Vec<Regex> {
+        inp_vec
+            .into_iter()
+            .filter_map(|s| Regex::new(s).ok())
+            .collect::<Vec<Regex>>()
+    }
+
+    #[test]
+    fn test_filter_paths_ignore_hidden() {
+        let paths = create_pathbuf_vec(get_mock_repo_vec());
+
         let root = PathBuf::from("user/root/repo");
         let allowed_exts = create_hashset(vec!["py", "rs", "toml"]);
         let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
-        let gitignored_patterns = vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]
-            .into_iter()
-            .filter_map(|s| Regex::new(s).ok())
-            .collect::<Vec<Regex>>();
+        let gitignored_patterns =
+            create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
 
-        let expected_result: Vec<PathBuf> = [
+        let expected_result: Vec<PathBuf> = create_pathbuf_vec(vec![
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
             "python/cli/__init__.py",
             "Cargo.toml",
-        ]
-        .iter()
-        .map(PathBuf::from)
-        .collect();
+        ]);
 
         let actual_result = filter_paths(
             paths,
@@ -181,6 +190,35 @@ mod tests {
             &ignore_dirs,
             &gitignored_patterns,
             true,
+        );
+
+        assert_eq!(actual_result, expected_result);
+    }
+
+    #[test]
+    fn test_filter_paths_process_hidden() {
+        let paths = create_pathbuf_vec(get_mock_repo_vec());
+
+        let root = PathBuf::from("user/root/repo");
+        let allowed_exts = create_hashset(vec!["rs", "toml"]);
+        let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
+        let gitignored_patterns =
+            create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
+
+        let expected_result: Vec<PathBuf> = create_pathbuf_vec(vec![
+            "src/core/some_file.rs",
+            "src/core/some_file2.rs",
+            "Cargo.toml",
+            ".hidden.toml",
+        ]);
+
+        let actual_result = filter_paths(
+            paths,
+            &root,
+            &allowed_exts,
+            &ignore_dirs,
+            &gitignored_patterns,
+            false,
         );
 
         assert_eq!(actual_result, expected_result);
