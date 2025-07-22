@@ -1,4 +1,5 @@
-
+# repo-mapper-rs
+Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 
 # Repo map
 ```

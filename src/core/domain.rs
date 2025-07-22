@@ -5,7 +5,6 @@ use std::{
     ffi,
     path::{Path, PathBuf},
 };
-use walkdir::DirEntry;
 
 #[derive(Debug)]
 pub struct FileTree {
@@ -67,8 +66,8 @@ impl Default for FileTree {
     }
 }
 
-pub fn filter_entries(
-    entries: Vec<DirEntry>,
+pub fn filter_paths(
+    paths: Vec<PathBuf>,
     root: &PathBuf,
     allowed_exts: &HashSet<String>,
     ignore_dirs: &HashSet<String>,
@@ -76,33 +75,30 @@ pub fn filter_entries(
     ignore_hidden: bool,
 ) -> Vec<PathBuf> {
     #[inline(always)]
-    fn _is_hidden(entry: &DirEntry) -> bool {
-        entry
-            .file_name()
-            .to_str()
+    fn _is_hidden(path: &Path) -> bool {
+        path.file_name()
+            .and_then(|s| s.to_str())
             .map(|s| s.starts_with("."))
             .unwrap_or(false)
     }
 
     #[inline(always)]
-    fn _is_allowed_ext(entry: &DirEntry, allowed_exts: &HashSet<String>) -> bool {
+    fn _is_allowed_ext(path: &Path, allowed_exts: &HashSet<String>) -> bool {
         if allowed_exts.is_empty() {
             return true;
         }
-        entry
-            .path()
-            .extension()
+        path.extension()
             .and_then(ffi::OsStr::to_str)
             .map(|ext| allowed_exts.contains(ext))
             .unwrap_or(false)
     }
 
     #[inline(always)]
-    fn _is_ignored_dir(entry: &DirEntry, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
+    fn _is_ignored_dir(path: &Path, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
         if ignore_dirs.is_empty() {
             return true;
         }
-        match entry.path().strip_prefix(root) {
+        match path.strip_prefix(root) {
             Ok(stripped) => stripped.ancestors().any(|anc| {
                 anc.file_name()
                     .and_then(|name| name.to_str())
@@ -119,12 +115,74 @@ pub fn filter_entries(
         patterns.iter().any(|re| re.is_match(&rel_str))
     }
 
-    entries
+    paths
         .into_par_iter()
         .filter(|e| !ignore_hidden || !_is_hidden(e))
         .filter(|e| _is_allowed_ext(e, allowed_exts))
         .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
-        .filter_map(|e| e.path().strip_prefix(root).ok().map(|p| p.to_owned()))
+        .filter_map(|e| e.as_path().strip_prefix(root).ok().map(|p| p.to_owned()))
         .filter(|p| !_is_gitignored(p, gitignored_patterns))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use regex::Regex;
+    use std::{collections::HashSet, path::PathBuf};
+
+    use super::filter_paths;
+
+    #[test]
+    fn test_filter_paths() {
+        fn create_hashset(inp_vec: Vec<&str>) -> HashSet<String> {
+            inp_vec
+                .into_iter()
+                .map(str::to_string)
+                .collect::<HashSet<_>>()
+        }
+
+        let paths = [
+            "user/root/repo/.github/workflows/ci.yaml",
+            "user/root/repo/src/core/some_file.rs",
+            "user/root/repo/src/core/some_file2.rs",
+            "user/root/repo/python/cli/__init__.py",
+            "user/root/repo/.venv/site-packages/__init__.py",
+            "user/root/repo/README.md",
+            "user/root/repo/scrap/some_file.rs",
+            "user/root/repo/.pytest_cache/some_cache.py",
+            "user/root/repo/target/some_build.rs",
+            "user/root/repo/Cargo.toml",
+        ]
+        .iter()
+        .map(PathBuf::from)
+        .collect();
+        let root = PathBuf::from("user/root/repo");
+        let allowed_exts = create_hashset(vec!["py", "rs", "toml"]);
+        let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
+        let gitignored_patterns = vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]
+            .into_iter()
+            .filter_map(|s| Regex::new(s).ok())
+            .collect::<Vec<Regex>>();
+
+        let expected_result: Vec<PathBuf> = [
+            "src/core/some_file.rs",
+            "src/core/some_file2.rs",
+            "python/cli/__init__.py",
+            "Cargo.toml",
+        ]
+        .iter()
+        .map(PathBuf::from)
+        .collect();
+
+        let actual_result = filter_paths(
+            paths,
+            &root,
+            &allowed_exts,
+            &ignore_dirs,
+            &gitignored_patterns,
+            true,
+        );
+
+        assert_eq!(actual_result, expected_result);
+    }
 }

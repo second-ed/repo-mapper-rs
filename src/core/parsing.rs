@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
 pub struct Args {
     pub scripts_root: PathBuf,
@@ -181,9 +181,10 @@ impl Deref for ReadMe {
     }
 }
 
-pub fn list_files(path: impl AsRef<Path>) -> Vec<DirEntry> {
+pub fn list_files(path: impl AsRef<Path>) -> Vec<PathBuf> {
     WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
+        .map(|e| e.path().to_owned())
         .collect()
 }

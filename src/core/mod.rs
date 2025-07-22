@@ -4,7 +4,7 @@ pub mod parsing;
 use colored::Colorize;
 use std::process::ExitCode;
 
-use domain::{filter_entries, FileTree};
+use domain::{filter_paths, FileTree};
 use parsing::{list_files, Args, GitIgnore, ReadMe};
 
 pub fn main(
@@ -26,16 +26,17 @@ pub fn main(
 
     let readme = ReadMe::parse(&args.readme_path)?;
     let gitignore = GitIgnore::parse(&args.gitignore_path)?;
-    let entries = list_files(&args.scripts_root);
+    let paths = list_files(&args.scripts_root);
 
-    let paths = filter_entries(
-        entries,
+    let paths = filter_paths(
+        paths,
         &args.scripts_root,
         &args.allowed_exts,
         &args.ignore_dirs,
         &gitignore.parse_lines(),
         args.ignore_hidden,
     );
+
     let tree = FileTree::new().create_map(paths);
     let modified_readme = readme.update_readme(tree.render());
 
