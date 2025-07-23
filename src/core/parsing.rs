@@ -9,6 +9,7 @@ use std::{
 };
 use walkdir::WalkDir;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct Args {
     pub scripts_root: PathBuf,
     pub readme_path: PathBuf,
@@ -187,4 +188,71 @@ pub fn list_files(path: impl AsRef<Path>) -> Vec<PathBuf> {
         .filter_map(Result::ok)
         .map(|e| e.path().to_owned())
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Args, GitIgnore, ReadMe};
+    use crate::core::test_utils::{create_gitignore_patterns, create_hashset};
+    use regex::Regex;
+    use std::path::PathBuf;
+    use test_case::test_case;
+
+    #[test]
+    fn test_args() {
+        let args = Args::new(
+            "root".to_string(),
+            "readme.md".to_string(),
+            ".gitignore".to_string(),
+            vec!["py".to_string(), "rs".to_string()],
+            vec![],
+            true,
+        );
+
+        let expected_result = Args {
+            scripts_root: PathBuf::from("root"),
+            readme_path: PathBuf::from("readme.md"),
+            gitignore_path: PathBuf::from(".gitignore"),
+            allowed_exts: create_hashset(vec!["py", "rs"]),
+            ignore_dirs: create_hashset(vec![]),
+            ignore_hidden: true,
+        };
+
+        assert_eq!(args, expected_result);
+    }
+
+    #[test]
+    fn test_gitignore() {
+        fn regex_vec_to_strs(vec: &[Regex]) -> Vec<&str> {
+            vec.iter().map(|re| re.as_str()).collect()
+        }
+
+        let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py".to_string());
+
+        let actual_result = gitignore.parse_lines();
+        let expected_result = create_gitignore_patterns(vec![
+            "(^|/)\\.pytest_cache/(.*)?$",
+            "(^|/)[^/]*\\.log$",
+            "(^|/).scratch\\.py$",
+        ]);
+
+        assert_eq!(
+            regex_vec_to_strs(&actual_result),
+            regex_vec_to_strs(&expected_result)
+        );
+    }
+
+    #[test_case("#Some readme", "appended", "#Some readme\n\nappended" ; "Ensure appends if the repo map doesn't exist")]
+    #[test_case("#Some readme\n# Repo map\n```\noriginal\n::\n```\n#Some line afterwards", "# Repo map\n```\nmodified\n::\n```", "#Some readme\n# Repo map\n```\nmodified\n::\n```\n#Some line afterwards" ; "Ensure replaces if the repo map exists")]
+    fn test_readme_if_not_already_exists(
+        initial_readme: &str,
+        repo_map: &str,
+        expected_result: &str,
+    ) {
+        let readme = ReadMe(initial_readme.to_string());
+        assert_eq!(
+            readme.update_readme(repo_map.to_string()),
+            ReadMe(expected_result.to_string()),
+        );
+    }
 }

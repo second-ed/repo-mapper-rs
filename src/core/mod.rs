@@ -1,11 +1,10 @@
 pub mod domain;
 pub mod parsing;
-
+mod test_utils;
 use colored::Colorize;
-use std::process::ExitCode;
-
 use domain::{filter_paths, FileTree};
 use parsing::{list_files, Args, GitIgnore, ReadMe};
+use std::process::ExitCode;
 
 pub fn main(
     scripts_root: String,
