@@ -242,17 +242,23 @@ mod tests {
         );
     }
 
-    #[test_case("#Some readme", "appended", "#Some readme\n\nappended" ; "Ensure appends if the repo map doesn't exist")]
-    #[test_case("#Some readme\n# Repo map\n```\noriginal\n::\n```\n#Some line afterwards", "# Repo map\n```\nmodified\n::\n```", "#Some readme\n# Repo map\n```\nmodified\n::\n```\n#Some line afterwards" ; "Ensure replaces if the repo map exists")]
-    fn test_readme_if_not_already_exists(
-        initial_readme: &str,
-        repo_map: &str,
-        expected_result: &str,
-    ) {
-        let readme = ReadMe(initial_readme.to_string());
+    #[test_case(
+        "#Some readme", 
+        "appended", 
+        "#Some readme\n\nappended" ; 
+        "Ensure appends if the repo map doesn't exist"
+    )]
+    #[test_case(
+        "#Some readme\n# Repo map\n```\noriginal\n::\n```\n#Some line afterwards", 
+        "# Repo map\n```\nmodified\n::\n```", 
+        "#Some readme\n# Repo map\n```\nmodified\n::\n```\n#Some line afterwards" ; 
+        "Ensure replaces if the repo map exists"
+    )]
+    fn test_readme_if_not_already_exists(inp_readme: &str, repo_map: &str, expected_result: &str) {
+        let readme = ReadMe(inp_readme.into());
         assert_eq!(
-            readme.update_readme(repo_map.to_string()),
-            ReadMe(expected_result.to_string()),
+            readme.update_readme(repo_map.into()),
+            ReadMe(expected_result.into()),
         );
     }
 }
