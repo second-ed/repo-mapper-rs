@@ -1,3 +1,4 @@
+use crate::core::converters::to_hashset;
 use colored::Colorize;
 use regex::Regex;
 use std::{
@@ -32,8 +33,8 @@ impl Args {
         let readme_path = PathBuf::from(readme_path);
         let gitignore_path = PathBuf::from(gitignore_path);
 
-        let allowed_exts: HashSet<String> = allowed_exts.into_iter().collect();
-        let ignore_dirs: HashSet<String> = ignore_dirs.into_iter().collect();
+        let allowed_exts: HashSet<String> = to_hashset(allowed_exts);
+        let ignore_dirs: HashSet<String> = to_hashset(ignore_dirs);
 
         Self {
             scripts_root,
@@ -193,7 +194,7 @@ pub fn list_files(path: impl AsRef<Path>) -> Vec<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{Args, GitIgnore, ReadMe};
-    use crate::core::test_utils::{create_gitignore_patterns, create_hashset};
+    use crate::core::converters::{to_hashset, to_regex_vec};
     use regex::Regex;
     use std::path::PathBuf;
     use test_case::test_case;
@@ -213,8 +214,8 @@ mod tests {
             scripts_root: PathBuf::from("root"),
             readme_path: PathBuf::from("readme.md"),
             gitignore_path: PathBuf::from(".gitignore"),
-            allowed_exts: create_hashset(vec!["py", "rs"]),
-            ignore_dirs: create_hashset(vec![]),
+            allowed_exts: to_hashset(vec!["py", "rs"]),
+            ignore_dirs: to_hashset(Vec::<&str>::new()),
             ignore_hidden: true,
         };
 
@@ -230,7 +231,7 @@ mod tests {
         let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py".to_string());
 
         let actual_result = gitignore.parse_lines();
-        let expected_result = create_gitignore_patterns(vec![
+        let expected_result = to_regex_vec(vec![
             "(^|/)\\.pytest_cache/(.*)?$",
             "(^|/)[^/]*\\.log$",
             "(^|/).scratch\\.py$",

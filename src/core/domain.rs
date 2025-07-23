@@ -128,22 +128,21 @@ pub fn filter_paths(
 #[cfg(test)]
 mod tests {
     use super::{filter_paths, FileTree};
-    use crate::core::test_utils::{
-        create_gitignore_patterns, create_hashset, create_pathbuf_vec, get_mock_repo_vec,
-    };
+    use crate::core::converters::{to_hashset, to_pathbufs, to_regex_vec};
+    use crate::core::test_utils::get_mock_repo_vec;
     use std::path::PathBuf;
 
     #[test]
     fn test_filter_paths_ignore_hidden() {
-        let paths = create_pathbuf_vec(get_mock_repo_vec());
+        let paths = to_pathbufs(get_mock_repo_vec());
 
         let root = PathBuf::from("user/root/repo");
-        let allowed_exts = create_hashset(vec!["py", "rs", "toml"]);
-        let ignore_dirs = create_hashset(Vec::new());
+        let allowed_exts = to_hashset(vec!["py", "rs", "toml"]);
+        let ignore_dirs = to_hashset(Vec::<&str>::new());
         let gitignored_patterns =
-            create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
+            to_regex_vec(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
 
-        let expected_result: Vec<PathBuf> = create_pathbuf_vec(vec![
+        let expected_result: Vec<PathBuf> = to_pathbufs(vec![
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
             "python/cli/__init__.py",
@@ -166,15 +165,15 @@ mod tests {
 
     #[test]
     fn test_filter_paths_process_hidden() {
-        let paths = create_pathbuf_vec(get_mock_repo_vec());
+        let paths = to_pathbufs(get_mock_repo_vec());
 
         let root = PathBuf::from("user/root/repo");
-        let allowed_exts = create_hashset(Vec::new());
-        let ignore_dirs = create_hashset(vec!["scrap", ".venv"]);
+        let allowed_exts = to_hashset(Vec::<&str>::new());
+        let ignore_dirs = to_hashset(vec!["scrap", ".venv"]);
         let gitignored_patterns =
-            create_gitignore_patterns(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
+            to_regex_vec(vec![r"(^|/)\.pytest_cache/(.*)?$", r"(^|/)target/(.*)?$"]);
 
-        let expected_result: Vec<PathBuf> = create_pathbuf_vec(vec![
+        let expected_result: Vec<PathBuf> = to_pathbufs(vec![
             ".github/workflows/ci.yaml",
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
@@ -198,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_file_tree() {
-        let paths = create_pathbuf_vec(vec![
+        let paths = to_pathbufs(vec![
             ".github/workflows/ci.yaml",
             "src/core/some_file.rs",
             "src/core/some_file2.rs",
