@@ -1,4 +1,4 @@
-use crate::core::converters::to_hashset;
+use crate::core::{adapters::FileSystem, converters::to_hashset};
 use colored::Colorize;
 use regex::Regex;
 use std::{
@@ -52,7 +52,7 @@ trait FileText: Sized {
 
     fn from_string(s: String) -> Self;
 
-    fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+    fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
         let path = path.as_ref().to_path_buf();
         let basename = path
             .file_name()
@@ -73,7 +73,7 @@ trait FileText: Sized {
             return Err(ExitCode::FAILURE);
         }
 
-        match fs::read_to_string(&path) {
+        match file_sys.read_to_string(&path) {
             Ok(contents) => Ok(Self::from_string(contents)),
             Err(e) => {
                 eprintln!(
@@ -101,8 +101,8 @@ impl FileText for GitIgnore {
 }
 
 impl GitIgnore {
-    pub fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
-        <Self as FileText>::parse(path)
+    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+        <Self as FileText>::parse(file_sys, path)
     }
 
     pub fn parse_lines(&self) -> Vec<Regex> {
@@ -155,8 +155,8 @@ impl FileText for ReadMe {
 }
 
 impl ReadMe {
-    pub fn parse(path: impl AsRef<Path>) -> Result<Self, ExitCode> {
-        <Self as FileText>::parse(path)
+    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+        <Self as FileText>::parse(file_sys, path)
     }
 
     pub fn write(&self, path: &Path) -> Result<(), io::Error> {

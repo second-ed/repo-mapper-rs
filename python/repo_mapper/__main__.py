@@ -1,6 +1,6 @@
 import argparse
 import sys
-import repo_mapper_rs
+import repo_mapper_py
 
 if __name__ == "__main__":
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     sys.exit(
         int(
-            repo_mapper_rs.py_main(
+            repo_mapper_py.py_main(
                 repo_root=args.repo_root,
                 readme_path=args.readme_path,
                 gitignore_path=args.gitignore_path,

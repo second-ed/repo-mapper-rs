@@ -13,6 +13,7 @@ Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 │       └── __main__.py
 ├── src
 │   ├── core
+│   │   ├── adapters.rs
 │   │   ├── converters.rs
 │   │   ├── domain.rs
 │   │   ├── mod.rs
@@ -20,6 +21,8 @@ Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 │   │   └── test_utils.rs
 │   ├── api.rs
 │   └── lib.rs
+├── tests
+│   └── integration_tests.rs
 ├── Cargo.lock
 ├── Cargo.toml
 ├── README.md

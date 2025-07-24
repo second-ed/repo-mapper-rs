@@ -14,7 +14,7 @@ dynamic = ["version"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "repo_mapper_rs"
+module-name = "repo_mapper_py"
 python-source = "python"
 python-packages = ["repo_mapper"]
 strip = true

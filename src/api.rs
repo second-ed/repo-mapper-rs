@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use pyo3::prelude::*;
 
-use crate::core::main;
+use crate::core::{adapters::RealFileSystem, main};
 
 #[pyfunction]
 fn py_main(
@@ -13,7 +13,10 @@ fn py_main(
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
 ) -> PyResult<i8> {
+    let mut file_sys = RealFileSystem;
+
     match main(
+        &mut file_sys,
         repo_root,
         readme_path,
         gitignore_path,
@@ -29,7 +32,7 @@ fn py_main(
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn repo_mapper_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn repo_mapper_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_main, m)?)?;
     Ok(())
 }

@@ -1,13 +1,17 @@
-mod converters;
+pub mod adapters;
+pub mod converters;
 pub mod domain;
 pub mod parsing;
+
 mod test_utils;
+use crate::core::adapters::FileSystem;
+use crate::core::domain::{filter_paths, FileTree};
+use crate::core::parsing::{list_files, Args, GitIgnore, ReadMe};
 use colored::Colorize;
-use domain::{filter_paths, FileTree};
-use parsing::{list_files, Args, GitIgnore, ReadMe};
 use std::process::ExitCode;
 
 pub fn main(
+    file_sys: &mut impl FileSystem,
     repo_root: String,
     readme_path: String,
     gitignore_path: String,
@@ -24,8 +28,8 @@ pub fn main(
         ignore_hidden,
     );
 
-    let readme = ReadMe::parse(&args.readme_path)?;
-    let gitignore = GitIgnore::parse(&args.gitignore_path)?;
+    let readme = ReadMe::parse(file_sys, &args.readme_path)?;
+    let gitignore = GitIgnore::parse(file_sys, &args.gitignore_path)?;
     let paths = list_files(&args.repo_root);
 
     let paths = filter_paths(

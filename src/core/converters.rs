@@ -10,6 +10,14 @@ where
     inp.into_iter().map(|s| PathBuf::from(s.as_ref())).collect()
 }
 
+pub fn to_strings<I, S>(inp: I) -> Vec<String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    inp.into_iter().map(|s| s.as_ref().to_string()).collect()
+}
+
 pub fn to_hashset<I, S>(inp: I) -> HashSet<String>
 where
     I: IntoIterator<Item = S>,
