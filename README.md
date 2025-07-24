@@ -8,7 +8,7 @@ Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 │       ├── ci.yaml
 │       └── publish.yaml
 ├── python
-│   └── repo_mapper_rs
+│   └── repo_mapper
 │       ├── __init__.py
 │       └── __main__.py
 ├── src

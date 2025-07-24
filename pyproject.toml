@@ -11,10 +11,13 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["version"]
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "repo_mapper_rs"
 python-source = "python"
+python-packages = ["repo_mapper"]
+strip = true
 
 [tool.uv]
 # Rebuild package when any rust files change
