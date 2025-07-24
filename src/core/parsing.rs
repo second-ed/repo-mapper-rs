@@ -183,14 +183,6 @@ impl Deref for ReadMe {
     }
 }
 
-pub fn list_files(path: impl AsRef<Path>) -> Vec<PathBuf> {
-    WalkDir::new(path)
-        .into_iter()
-        .filter_map(Result::ok)
-        .map(|e| e.path().to_owned())
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::{Args, GitIgnore, ReadMe};

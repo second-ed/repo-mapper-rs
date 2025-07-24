@@ -3,13 +3,13 @@ use std::{collections::HashMap, path::PathBuf, process::ExitCode};
 use repo_mapper_rs::core::{adapters::FakeFileSystem, converters::to_strings, main};
 
 #[test]
-fn test_main() {
+fn test_modify_readme() {
     let files = vec![
         ("fake/repo/root/src/main.rs", "let x = 1;"),
         ("fake/repo/root/src/lib.rs", "use std;"),
         ("fake/repo/root/Cargo.toml", ""),
         ("fake/repo/root/README.md", "# Some readme\n"),
-        ("fake/repo/root/.gitignore", "target/\nscratch.py"),
+        ("fake/repo/root/.gitignore", "target/"),
         ("fake/repo/root/target/some_build.rs", ""),
         ("fake/repo/root/scratch.py", ""),
     ]
@@ -24,7 +24,7 @@ fn test_main() {
     let gitignore_path = "fake/repo/root/.gitignore".to_string();
     let allowed_exts = to_strings(["py", "rs"]);
     let ignore_dirs = to_strings([".venv", "target"]);
-    let ignore_hidden = true;
+    let ignore_hidden = false;
 
     let exit_code = main(
         &mut file_sys,
@@ -39,6 +39,13 @@ fn test_main() {
         .files
         .get(&PathBuf::from("fake/repo/root/README.md")));
 
+    println!(
+        "{}",
+        &file_sys
+            .files
+            .get(&PathBuf::from("fake/repo/root/README.md"))
+            .unwrap()
+    );
     // FAILURE because it modifies the readme
     assert_eq!(exit_code, Ok(ExitCode::FAILURE));
 }

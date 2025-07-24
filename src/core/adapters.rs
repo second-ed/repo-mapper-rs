@@ -4,7 +4,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use walkdir::WalkDir;
+
 pub trait FileSystem {
+    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf>;
     fn read_to_string(&mut self, path: &Path) -> io::Result<String>;
     fn write(&mut self, path: &Path, contents: &str) -> std::result::Result<(), std::io::Error>;
 }
@@ -12,6 +15,13 @@ pub trait FileSystem {
 pub struct RealFileSystem;
 
 impl FileSystem for RealFileSystem {
+    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf> {
+        WalkDir::new(path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .map(|e| e.path().to_owned())
+            .collect()
+    }
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {
         fs::read_to_string(path)
     }
@@ -41,6 +51,9 @@ impl Default for FakeFileSystem {
 }
 
 impl FileSystem for FakeFileSystem {
+    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf> {
+        self.files.keys().cloned().collect()
+    }
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {
         self.operations.push(format!("read: `{}`", &path.display()));
         if let Some(contents) = self.files.get(path) {
