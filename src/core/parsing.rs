@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Args {
-    pub scripts_root: PathBuf,
+    pub repo_root: PathBuf,
     pub readme_path: PathBuf,
     pub gitignore_path: PathBuf,
     pub allowed_exts: HashSet<String>,
@@ -22,14 +22,14 @@ pub struct Args {
 
 impl Args {
     pub fn new(
-        scripts_root: String,
+        repo_root: String,
         readme_path: String,
         gitignore_path: String,
         allowed_exts: Vec<String>,
         ignore_dirs: Vec<String>,
         ignore_hidden: bool,
     ) -> Self {
-        let scripts_root = PathBuf::from(scripts_root);
+        let repo_root = PathBuf::from(repo_root);
         let readme_path = PathBuf::from(readme_path);
         let gitignore_path = PathBuf::from(gitignore_path);
 
@@ -37,7 +37,7 @@ impl Args {
         let ignore_dirs: HashSet<String> = to_hashset(ignore_dirs);
 
         Self {
-            scripts_root,
+            repo_root,
             readme_path,
             gitignore_path,
             allowed_exts,
@@ -211,7 +211,7 @@ mod tests {
         );
 
         let expected_result = Args {
-            scripts_root: PathBuf::from("root"),
+            repo_root: PathBuf::from("root"),
             readme_path: PathBuf::from("readme.md"),
             gitignore_path: PathBuf::from(".gitignore"),
             allowed_exts: to_hashset(vec!["py", "rs"]),

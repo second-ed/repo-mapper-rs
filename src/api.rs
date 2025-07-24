@@ -6,7 +6,7 @@ use crate::core::main;
 
 #[pyfunction]
 fn py_main(
-    scripts_root: String,
+    repo_root: String,
     readme_path: String,
     gitignore_path: String,
     allowed_exts: Vec<String>,
@@ -14,7 +14,7 @@ fn py_main(
     ignore_hidden: bool,
 ) -> PyResult<i8> {
     match main(
-        scripts_root,
+        repo_root,
         readme_path,
         gitignore_path,
         allowed_exts,

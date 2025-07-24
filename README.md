@@ -7,6 +7,9 @@ Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 │   └── workflows
 │       ├── ci.yaml
 │       └── publish.yaml
+├── python
+│   ├── __init__.py
+│   └── __main__.py
 ├── src
 │   ├── core
 │   │   ├── converters.rs

@@ -8,7 +8,7 @@ use parsing::{list_files, Args, GitIgnore, ReadMe};
 use std::process::ExitCode;
 
 pub fn main(
-    scripts_root: String,
+    repo_root: String,
     readme_path: String,
     gitignore_path: String,
     allowed_exts: Vec<String>,
@@ -16,7 +16,7 @@ pub fn main(
     ignore_hidden: bool,
 ) -> Result<ExitCode, ExitCode> {
     let args = Args::new(
-        scripts_root,
+        repo_root,
         readme_path,
         gitignore_path,
         allowed_exts,
@@ -26,11 +26,11 @@ pub fn main(
 
     let readme = ReadMe::parse(&args.readme_path)?;
     let gitignore = GitIgnore::parse(&args.gitignore_path)?;
-    let paths = list_files(&args.scripts_root);
+    let paths = list_files(&args.repo_root);
 
     let paths = filter_paths(
         paths,
-        &args.scripts_root,
+        &args.repo_root,
         &args.allowed_exts,
         &args.ignore_dirs,
         &gitignore.parse_lines(),
