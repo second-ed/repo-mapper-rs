@@ -26,9 +26,9 @@ pub struct FakeFileSystem {
 }
 
 impl FakeFileSystem {
-    pub fn new() -> Self {
+    pub fn new(files: HashMap<PathBuf, String>) -> Self {
         Self {
-            files: HashMap::new(),
+            files,
             operations: Vec::new(),
         }
     }
@@ -36,7 +36,7 @@ impl FakeFileSystem {
 
 impl Default for FakeFileSystem {
     fn default() -> Self {
-        Self::new()
+        Self::new(HashMap::new())
     }
 }
 

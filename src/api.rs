@@ -25,6 +25,7 @@ fn py_main(
         ignore_hidden,
     ) {
         Ok(ExitCode::SUCCESS) => Ok(0),
+        Ok(ExitCode::FAILURE) => Ok(1),
         Err(ExitCode::FAILURE) => Ok(1),
         _ => Ok(-1),
     }

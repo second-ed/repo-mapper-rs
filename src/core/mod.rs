@@ -45,12 +45,12 @@ pub fn main(
     let modified_readme = readme.update_readme(tree.render());
 
     if modified_readme != readme {
-        if let Err(e) = modified_readme.write(&args.readme_path) {
+        if let Err(e) = modified_readme.write(file_sys, &args.readme_path) {
             eprintln!("{} {}", "Failed to write README file: ".red().bold(), e);
             return Err(ExitCode::FAILURE);
         };
         println!("{}", "Modified README.md".yellow().bold());
-        return Err(ExitCode::FAILURE);
+        return Ok(ExitCode::FAILURE);
     }
     println!("{}", "Nothing to modify".green().bold());
     Ok(ExitCode::SUCCESS)

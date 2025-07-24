@@ -3,7 +3,7 @@ use colored::Colorize;
 use regex::Regex;
 use std::{
     collections::HashSet,
-    fs, io,
+    io,
     ops::Deref,
     path::{Path, PathBuf},
     process::ExitCode,
@@ -159,8 +159,8 @@ impl ReadMe {
         <Self as FileText>::parse(file_sys, path)
     }
 
-    pub fn write(&self, path: &Path) -> Result<(), io::Error> {
-        fs::write(path, &self.0)
+    pub fn write(&self, file_sys: &mut impl FileSystem, path: &Path) -> Result<(), io::Error> {
+        file_sys.write(path, &self.0)
     }
 
     pub fn update_readme(&self, repo_map: String) -> ReadMe {
