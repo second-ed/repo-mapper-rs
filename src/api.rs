@@ -1,8 +1,5 @@
-use std::process::ExitCode;
-
+use crate::core::{adapters::RealFileSystem, domain::RetCode, main};
 use pyo3::prelude::*;
-
-use crate::core::{adapters::RealFileSystem, main};
 
 #[pyfunction]
 fn py_main(
@@ -24,9 +21,11 @@ fn py_main(
         ignore_dirs,
         ignore_hidden,
     ) {
-        Ok(ExitCode::SUCCESS) => Ok(0),
-        Ok(ExitCode::FAILURE) => Ok(1),
-        Err(ExitCode::FAILURE) => Ok(1),
+        Ok(RetCode::NoModification) => Ok(0),
+        Ok(RetCode::ModifiedReadme) => Ok(1),
+        Err(RetCode::FailedParsingFile) => Ok(2),
+        Err(RetCode::FailedToWriteReadme) => Ok(3),
+        Err(RetCode::InvalidFilename) => Ok(4),
         _ => Ok(-1),
     }
 }

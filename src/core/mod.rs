@@ -5,10 +5,9 @@ pub mod parsing;
 
 mod test_utils;
 use crate::core::adapters::FileSystem;
-use crate::core::domain::{filter_paths, FileTree};
+use crate::core::domain::{filter_paths, FileTree, RetCode};
 use crate::core::parsing::{Args, GitIgnore, ReadMe};
 use colored::Colorize;
-use std::process::ExitCode;
 
 pub fn main(
     file_sys: &mut impl FileSystem,
@@ -18,7 +17,7 @@ pub fn main(
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
-) -> Result<ExitCode, ExitCode> {
+) -> Result<RetCode, RetCode> {
     let args = Args::new(
         repo_root,
         readme_path,
@@ -47,11 +46,11 @@ pub fn main(
     if modified_readme != readme {
         if let Err(e) = modified_readme.write(file_sys, &args.readme_path) {
             eprintln!("{} {}", "Failed to write README file: ".red().bold(), e);
-            return Err(ExitCode::FAILURE);
+            return Err(RetCode::FailedToWriteReadme);
         };
         println!("{}", "Modified README.md".yellow().bold());
-        return Ok(ExitCode::FAILURE);
+        return Ok(RetCode::ModifiedReadme);
     }
     println!("{}", "Nothing to modify".green().bold());
-    Ok(ExitCode::SUCCESS)
+    Ok(RetCode::NoModification)
 }

@@ -6,6 +6,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum RetCode {
+    NoModification,
+    ModifiedReadme,
+    FailedParsingFile,
+    FailedToWriteReadme,
+    InvalidFilename,
+}
+
 #[derive(Debug)]
 pub struct FileTree {
     pub nodes: HashMap<String, FileTree>,

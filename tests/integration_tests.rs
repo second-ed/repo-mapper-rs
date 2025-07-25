@@ -1,6 +1,6 @@
-use std::{collections::HashMap, path::PathBuf, process::ExitCode};
+use std::{collections::HashMap, path::PathBuf};
 
-use repo_mapper_rs::core::{adapters::FakeFileSystem, converters::to_strings, main};
+use repo_mapper_rs::core::{adapters::FakeFileSystem, converters::to_strings, main, domain::RetCode};
 use test_case::test_case;
 
 #[test_case(
@@ -10,9 +10,9 @@ use test_case::test_case;
     vec![".venv", "target"],
     true,
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
-    Ok(ExitCode::SUCCESS), 
+    Ok(RetCode::NoModification), 
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```" ;
-    "Ensure returns Ok(SUCCESS) when README is not modified"
+    "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
 #[test_case(
     "fake/repo/root/README.md",
@@ -21,7 +21,7 @@ use test_case::test_case;
     vec![],
     true,
     "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```",
-    Ok(ExitCode::SUCCESS),
+    Ok(RetCode::NoModification),
     "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
     "Ensure doesn't ignore directories if given empty vec"
 )]
@@ -32,9 +32,9 @@ use test_case::test_case;
     vec![".venv", "src"],
     true,
     "# Some readme\n",
-    Ok(ExitCode::FAILURE),
+    Ok(RetCode::ModifiedReadme),
     "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
-    "Ensure return Ok(FAILURE) if it modifies the README"
+    "Ensure return Ok(RetCode::ModifiedReadme) if it modifies the README"
 )]
 #[test_case(
     "fake/repo/root/README.md",
@@ -43,7 +43,7 @@ use test_case::test_case;
     vec![".venv", "src"],
     false,
     "# Some readme\n",
-    Ok(ExitCode::FAILURE),
+    Ok(RetCode::ModifiedReadme),
     "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
     "Ensure does not skip hidden file"
 )]
@@ -54,9 +54,9 @@ use test_case::test_case;
     vec![],
     true,
     "# Some readme\n",
-    Err(ExitCode::FAILURE),
+    Err(RetCode::InvalidFilename),
     "# Some readme\n" ;
-    "Ensure Err(FAILURE) if not pointed to a valid README"
+    "Ensure Err(RetCode::FailedParsingFile) if not pointed to a valid README"
 )]
 #[test_case(
     "fake/repo/root/docs/README.md",
@@ -65,7 +65,7 @@ use test_case::test_case;
     vec![],
     true,
     "# Some readme\n",
-    Err(ExitCode::FAILURE),
+    Err(RetCode::FailedParsingFile),
     "# Some readme\n" ;
     "Ensure Err(FAILURE) if not pointed to an invalid file"
 )]
@@ -76,7 +76,7 @@ use test_case::test_case;
     vec![],
     true,
     "# Some readme\n",
-    Err(ExitCode::FAILURE),
+    Err(RetCode::InvalidFilename),
     "# Some readme\n" ;
     "Ensure Err(FAILURE) if not pointed to valid gitignore."
 )]
@@ -88,7 +88,7 @@ fn test_modify_readme(
     ignore_dirs: Vec<&str>,
     ignore_hidden: bool,
     current_readme: &str,
-    expected_result: Result<ExitCode, ExitCode>,
+    expected_result: Result<RetCode, RetCode>,
     expected_readme: &str,
 ) {
     let files = vec![

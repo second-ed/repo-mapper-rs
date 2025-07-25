@@ -1,4 +1,4 @@
-use crate::core::{adapters::FileSystem, converters::to_hashset};
+use crate::core::{adapters::FileSystem, converters::to_hashset, domain::RetCode};
 use colored::Colorize;
 use regex::Regex;
 use std::{
@@ -6,7 +6,6 @@ use std::{
     io,
     ops::Deref,
     path::{Path, PathBuf},
-    process::ExitCode,
 };
 
 #[derive(Debug, Eq, PartialEq)]
@@ -51,7 +50,7 @@ trait FileText: Sized {
 
     fn from_string(s: String) -> Self;
 
-    fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+    fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, RetCode> {
         let path = path.as_ref().to_path_buf();
         let basename = path
             .file_name()
@@ -69,7 +68,7 @@ trait FileText: Sized {
                 .red()
                 .bold(),
             );
-            return Err(ExitCode::FAILURE);
+            return Err(RetCode::InvalidFilename);
         }
 
         match file_sys.read_to_string(&path) {
@@ -82,7 +81,7 @@ trait FileText: Sized {
                         .bold(),
                     e
                 );
-                Err(ExitCode::FAILURE)
+                Err(RetCode::FailedParsingFile)
             }
         }
     }
@@ -100,7 +99,7 @@ impl FileText for GitIgnore {
 }
 
 impl GitIgnore {
-    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, RetCode> {
         <Self as FileText>::parse(file_sys, path)
     }
 
@@ -154,7 +153,7 @@ impl FileText for ReadMe {
 }
 
 impl ReadMe {
-    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, ExitCode> {
+    pub fn parse(file_sys: &mut impl FileSystem, path: impl AsRef<Path>) -> Result<Self, RetCode> {
         <Self as FileText>::parse(file_sys, path)
     }
 
