@@ -12,19 +12,27 @@ if __name__ == "__main__":
     parser.add_argument(
         "--repo-root",
         type=str,
+        required=True,
         help="Path to the root of the repo to generate the map for.",
     )
     parser.add_argument(
-        "--readme-path", type=str, help="Path to the readme file to add the map to."
+        "--readme-path",
+        type=str,
+        required=True,
+        help="Path to the readme file to add the map to.",
     )
-    parser.add_argument("--gitignore-path", type=str, help="Path to the .gitignore.")
+    parser.add_argument(
+        "--gitignore-path", type=str, required=True, help="Path to the .gitignore."
+    )
     parser.add_argument(
         "--allowed-exts",
+        default=[],
         type=str_to_list,
         help="A comma separated string of extensions to remove. E.g. 'py,rs,toml'.",
     )
     parser.add_argument(
         "--ignore-dirs",
+        default=[],
         type=str_to_list,
         help="A comma separated string of directories to ignore. E.g. '.venv,target'.",
     )
@@ -34,7 +42,6 @@ if __name__ == "__main__":
         help="Flag to ignore hidden files. E.g. those that start with a '.' like '.env'.",
     )
     args = parser.parse_args()
-
     sys.exit(
         int(
             repo_mapper_py.py_main(
