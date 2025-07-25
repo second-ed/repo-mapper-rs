@@ -51,7 +51,7 @@ impl Default for FakeFileSystem {
 }
 
 impl FileSystem for FakeFileSystem {
-    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf> {
+    fn list_files(&mut self, _path: impl AsRef<Path>) -> Vec<PathBuf> {
         self.files.keys().cloned().collect()
     }
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {

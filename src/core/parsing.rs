@@ -8,7 +8,6 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-use walkdir::WalkDir;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Args {

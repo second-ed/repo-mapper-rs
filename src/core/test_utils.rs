@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub fn get_mock_repo_vec() -> Vec<&'static str> {
     vec![
         "user/root/repo/.github/workflows/ci.yaml",
