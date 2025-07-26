@@ -44,8 +44,8 @@ python -m repo_mapper \
 | `--repo-root`      | `str`                 | ✅    | Path to the root of the repository to scan           |
 | `--readme-path`    | `str`                 | ✅    | Path to the README file that will be modified        |
 | `--gitignore-path` | `str`                 | ✅    | Path to the `.gitignore` file                        |
-| `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). If not supplied, all extensions will be evaluated.              |
-| `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all extensions will be evaluated.          |
+| `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). If not supplied, all extensions will be evaluated. Note this is overruled by the `.gitignore`.              |
+| `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`.          |
 | `--ignore-hidden`  | Flag (no value)       | ❌     | If set, hidden files and directories will be ignored |
 
 
