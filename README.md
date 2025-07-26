@@ -80,10 +80,10 @@ python -m repo_mapper \
 ```
 
 # Ret codes
-| RetCode             | description           |
-| ------------------- | --------------------- |
-| `NoModification`      | The Repo Map reflects the current state of the repo. |
-| `ModifiedReadme`      | The README was updated. |
-| `FailedParsingFile`   | Failed to read the file to string. |
-| `FailedToWriteReadme` | Failed to write the modified README to file. |
-| `InvalidFilename`     | The given `README.md` or `.gitignore` path does not match the expected basename. |
+| RetCode               | int | description           |
+| ----------------------| --- | --------------------- |
+| `NoModification`      | 0   | The Repo Map reflects the current state of the repo. |
+| `ModifiedReadme`      | 1   | The README was updated. |
+| `FailedParsingFile`   | 2   | Failed to read the file to string. |
+| `FailedToWriteReadme` | 3   | Failed to write the modified README to file. |
+| `InvalidFilename`     | 4   | The given `README.md` or `.gitignore` path does not match the expected basename. |
