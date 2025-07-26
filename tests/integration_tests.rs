@@ -1,16 +1,17 @@
 use std::{collections::HashMap, path::PathBuf};
 
-use repo_mapper_rs::core::{adapters::FakeFileSystem, converters::to_strings, main, domain::RetCode};
+use repo_mapper_rs::core::{
+    adapters::FakeFileSystem, converters::to_strings, domain::RetCode, main,
+};
 use test_case::test_case;
 
 #[test_case(
-    "fake/repo/root/README.md",
-    "fake/repo/root/.gitignore",
+    "fake/repo/root/README.md", "fake/repo/root/.gitignore",
     vec!["rs", "md", "toml"],
     vec![".venv", "target"],
     true,
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
-    Ok(RetCode::NoModification), 
+    Ok(RetCode::NoModification),
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```" ;
     "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
