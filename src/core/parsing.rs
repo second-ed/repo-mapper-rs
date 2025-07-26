@@ -184,7 +184,7 @@ impl Deref for ReadMe {
 #[cfg(test)]
 mod tests {
     use super::{Args, GitIgnore, ReadMe};
-    use crate::core::converters::{to_hashset, to_regex_vec};
+    use crate::core::converters::{to_hashset, to_regex_vec, to_strings};
     use regex::Regex;
     use std::path::PathBuf;
     use test_case::test_case;
@@ -195,7 +195,7 @@ mod tests {
             "root".to_string(),
             "readme.md".to_string(),
             ".gitignore".to_string(),
-            vec!["py".to_string(), "rs".to_string()],
+            to_strings(["py", "rs"]),
             vec![],
             true,
         );
