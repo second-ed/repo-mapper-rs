@@ -6,7 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "repo_mapper_rs"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+colored = "3.0.0"
 pyo3 = "0.25.0"
+rayon = "1.10.0"
+regex = "1.11.1"
+test-case = "3.3.1"
+walkdir = "2.5.0"
