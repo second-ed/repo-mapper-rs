@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import repo_mapper_py
 
@@ -11,18 +12,21 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--repo-root",
-        type=str,
+        type=os.path.abspath,
         required=True,
         help="Path to the root of the repo to generate the map for.",
     )
     parser.add_argument(
         "--readme-path",
-        type=str,
+        type=os.path.abspath,
         required=True,
         help="Path to the readme file to add the map to.",
     )
     parser.add_argument(
-        "--gitignore-path", type=str, required=True, help="Path to the .gitignore."
+        "--gitignore-path",
+        type=os.path.abspath,
+        required=True,
+        help="Path to the .gitignore.",
     )
     parser.add_argument(
         "--allowed-exts",

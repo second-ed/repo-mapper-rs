@@ -51,6 +51,8 @@ python -m repo_mapper \
 
 # Repo map
 ```
+├── .git
+│   └── index.lock
 ├── .github
 │   └── workflows
 │       ├── ci.yaml

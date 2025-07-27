@@ -38,3 +38,23 @@ repos:
         entry: cargo clippy
         language: rust
         pass_filenames: false
+      - id: repo-map
+        name: repo_map
+        entry: uv
+        language: system
+        pass_filenames: false
+        args:
+          - run
+          - -m
+          - repo_mapper
+          - --repo-root
+          - .
+          - --readme-path
+          - ./README.md
+          - --gitignore-path
+          - ./.gitignore
+          - --allowed-exts
+          - py,rs,md,yaml,toml,lock
+          - --ignore-dirs
+          - .venv,target
+          - --ignore-hidden
