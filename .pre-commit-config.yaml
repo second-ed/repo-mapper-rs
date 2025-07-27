@@ -56,5 +56,5 @@ repos:
           - --allowed-exts
           - py,rs,md,yaml,toml,lock
           - --ignore-dirs
-          - .venv,target
-          - --ignore-hidden
+          - .venv,target,.git
+          # - --ignore-hidden

@@ -51,8 +51,6 @@ python -m repo_mapper \
 
 # Repo map
 ```
-├── .git
-│   └── index.lock
 ├── .github
 │   └── workflows
 │       ├── ci.yaml
@@ -73,6 +71,7 @@ python -m repo_mapper \
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs
+├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
 ├── README.md
