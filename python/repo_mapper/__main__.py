@@ -26,9 +26,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--allowed-exts",
-        default=[],
+        default=["py", "md", "toml", "lock", "yaml", "ipynb"],
         type=str_to_list,
-        help="A comma separated string of extensions to remove. E.g. 'py,rs,toml'.",
+        help="A comma separated string of extensions to remove. E.g. 'py,rs,toml'. Defaults to: 'py,md,toml,lock,yaml,ipynb'",
     )
     parser.add_argument(
         "--ignore-dirs",

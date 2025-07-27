@@ -25,6 +25,7 @@ cache-keys = [{file = "pyproject.toml"}, {file = "rust/Cargo.toml"}, {file = "**
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.2.0",
     "ruff>=0.12.5",
 ]
 # Uncomment to build rust code in development mode
