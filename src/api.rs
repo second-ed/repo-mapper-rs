@@ -9,6 +9,7 @@ fn py_main(
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
+    dirs_only: bool,
 ) -> PyResult<i8> {
     let mut file_sys = RealFileSystem;
 
@@ -20,6 +21,7 @@ fn py_main(
         allowed_exts,
         ignore_dirs,
         ignore_hidden,
+        dirs_only,
     ) {
         Ok(RetCode::NoModification) => Ok(0),
         Ok(RetCode::ModifiedReadme) => Ok(1),

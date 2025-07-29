@@ -45,6 +45,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Flag to ignore hidden files. E.g. those that start with a '.' like '.env'.",
     )
+    parser.add_argument(
+        "--dirs-only",
+        action="store_true",
+        help="",
+    )
     args = parser.parse_args()
     sys.exit(
         int(
@@ -55,6 +60,7 @@ if __name__ == "__main__":
                 allowed_exts=args.allowed_exts,
                 ignore_dirs=args.ignore_dirs,
                 ignore_hidden=args.ignore_hidden,
+                dirs_only=args.dirs_only,
             )
         )
     )

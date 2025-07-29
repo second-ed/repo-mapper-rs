@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use rayon::prelude::*;
 use regex::Regex;
 use std::{
@@ -131,6 +132,16 @@ pub fn filter_paths(
         .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
         .filter_map(|e| e.as_path().strip_prefix(root).ok().map(|p| p.to_owned()))
         .filter(|p| !_is_gitignored(p, gitignored_patterns))
+        .collect()
+}
+
+#[inline(always)]
+pub fn filter_dirnames(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    paths
+        .into_iter()
+        .filter_map(|p| p.parent().map(Path::to_path_buf))
+        .sorted()
+        .dedup()
         .collect()
 }
 

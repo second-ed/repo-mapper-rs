@@ -9,18 +9,28 @@ use test_case::test_case;
     "fake/repo/root/README.md", "fake/repo/root/.gitignore",
     vec!["rs", "md", "toml"],
     vec![".venv", "target"],
-    true,
+    true, false,
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
     Ok(RetCode::NoModification),
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```" ;
     "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
 #[test_case(
+    "fake/repo/root/README.md", "fake/repo/root/.gitignore",
+    vec!["rs", "md", "toml"],
+    vec![".venv", "target"],
+    true, true,
+    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
+    Ok(RetCode::ModifiedReadme),
+    "# Some readme\n\n\n# Repo map\n```\n└── src\n::\n```" ;
+    "Ensure only shows directories if dirs_only is true"
+)]
+#[test_case(
     "fake/repo/root/README.md",
     "fake/repo/root/.gitignore",
     vec!["rs", "md", "toml", "py"],
     vec![],
-    true,
+    true, false,
     "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```",
     Ok(RetCode::NoModification),
     "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
@@ -31,7 +41,7 @@ use test_case::test_case;
     "fake/repo/root/.gitignore",
     vec![],
     vec![".venv", "src"],
-    true,
+    true, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
     "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
@@ -42,7 +52,7 @@ use test_case::test_case;
     "fake/repo/root/.gitignore",
     vec![],
     vec![".venv", "src"],
-    false,
+    false, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
     "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
@@ -53,7 +63,7 @@ use test_case::test_case;
     "fake/repo/root/.gitignore",
     vec![],
     vec![],
-    true,
+    true, false,
     "# Some readme\n",
     Err(RetCode::InvalidFilename),
     "# Some readme\n" ;
@@ -64,7 +74,7 @@ use test_case::test_case;
     "fake/repo/root/.gitignore",
     vec![],
     vec![],
-    true,
+    true, false,
     "# Some readme\n",
     Err(RetCode::FailedParsingFile),
     "# Some readme\n" ;
@@ -75,7 +85,7 @@ use test_case::test_case;
     "fake/repo/root/.gitdonotignore",
     vec![],
     vec![],
-    true,
+    true, false,
     "# Some readme\n",
     Err(RetCode::InvalidFilename),
     "# Some readme\n" ;
@@ -88,6 +98,7 @@ fn test_modify_readme(
     allowed_exts: Vec<&str>,
     ignore_dirs: Vec<&str>,
     ignore_hidden: bool,
+    dirs_only: bool,
     current_readme: &str,
     expected_result: Result<RetCode, RetCode>,
     expected_readme: &str,
@@ -123,6 +134,7 @@ fn test_modify_readme(
         allowed_exts,
         ignore_dirs,
         ignore_hidden,
+        dirs_only,
     );
 
     let readme_pathbuf = PathBuf::from("fake/repo/root/README.md");

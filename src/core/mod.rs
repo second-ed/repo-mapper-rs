@@ -5,7 +5,7 @@ pub mod parsing;
 
 mod test_utils;
 use crate::core::adapters::FileSystem;
-use crate::core::domain::{filter_paths, FileTree, RetCode};
+use crate::core::domain::{filter_dirnames, filter_paths, FileTree, RetCode};
 use crate::core::parsing::{Args, GitIgnore, ReadMe};
 use colored::Colorize;
 
@@ -17,6 +17,7 @@ pub fn main(
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
+    dirs_only: bool,
 ) -> Result<RetCode, RetCode> {
     let args = Args::new(
         repo_root,
@@ -25,13 +26,14 @@ pub fn main(
         allowed_exts,
         ignore_dirs,
         ignore_hidden,
+        dirs_only,
     );
 
     let readme = ReadMe::parse(file_sys, &args.readme_path)?;
     let gitignore = GitIgnore::parse(file_sys, &args.gitignore_path)?;
     let paths = file_sys.list_files(&args.repo_root);
 
-    let paths = filter_paths(
+    let paths: Vec<std::path::PathBuf> = filter_paths(
         paths,
         &args.repo_root,
         &args.allowed_exts,
@@ -39,6 +41,12 @@ pub fn main(
         &gitignore.parse_lines(),
         args.ignore_hidden,
     );
+
+    let paths = if args.dirs_only {
+        filter_dirnames(paths.clone())
+    } else {
+        paths
+    };
 
     let tree = FileTree::new().create_map(paths);
     let modified_readme = readme.update_readme(tree.render());

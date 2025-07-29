@@ -40,13 +40,10 @@ repos:
         pass_filenames: false
       - id: repo-map
         name: repo_map
-        entry: uv
+        entry: uv run -m repo_mapper
         language: system
         pass_filenames: false
         args:
-          - run
-          - -m
-          - repo_mapper
           - --repo-root
           - .
           - --readme-path
