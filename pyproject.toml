@@ -31,7 +31,7 @@ repo-mapper-rs = { workspace = true }
 [dependency-groups]
 dev = [
     "pre-commit>=4.2.0",
-    "repo-mapper-rs",
+    "repo-mapper-rs>=0.1.0",
     "ruff>=0.12.5",
 ]
 # Uncomment to build rust code in development mode
