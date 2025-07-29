@@ -9,6 +9,7 @@ use crate::core::domain::{filter_dirnames, filter_paths, FileTree, RetCode};
 use crate::core::parsing::{Args, GitIgnore, ReadMe};
 use colored::Colorize;
 
+#[allow(clippy::too_many_arguments)]
 pub fn main(
     file_sys: &mut impl FileSystem,
     repo_root: String,
