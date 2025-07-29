@@ -48,7 +48,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dirs-only",
         action="store_true",
-        help="",
+        help="Flag to only map directories instead of files",
     )
     args = parser.parse_args()
     sys.exit(
