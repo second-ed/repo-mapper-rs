@@ -16,6 +16,7 @@ pub struct Args {
     pub allowed_exts: HashSet<String>,
     pub ignore_dirs: HashSet<String>,
     pub ignore_hidden: bool,
+    pub dirs_only: bool,
 }
 
 impl Args {
@@ -26,6 +27,7 @@ impl Args {
         allowed_exts: Vec<String>,
         ignore_dirs: Vec<String>,
         ignore_hidden: bool,
+        dirs_only: bool,
     ) -> Self {
         let repo_root = PathBuf::from(repo_root);
         let readme_path = PathBuf::from(readme_path);
@@ -41,6 +43,7 @@ impl Args {
             allowed_exts,
             ignore_dirs,
             ignore_hidden,
+            dirs_only,
         }
     }
 }
@@ -198,6 +201,7 @@ mod tests {
             to_strings(["py", "rs"]),
             vec![],
             true,
+            false,
         );
 
         let expected_result = Args {
@@ -207,6 +211,7 @@ mod tests {
             allowed_exts: to_hashset(vec!["py", "rs"]),
             ignore_dirs: to_hashset(Vec::<&str>::new()),
             ignore_hidden: true,
+            dirs_only: false,
         };
 
         assert_eq!(args, expected_result);
@@ -234,15 +239,15 @@ mod tests {
     }
 
     #[test_case(
-        "#Some readme", 
-        "appended", 
-        "#Some readme\n\nappended" ; 
+        "#Some readme",
+        "appended",
+        "#Some readme\n\nappended" ;
         "Ensure appends if the repo map doesn't exist"
     )]
     #[test_case(
-        "#Some readme\n# Repo map\n```\noriginal\n::\n```\n#Some line afterwards", 
-        "# Repo map\n```\nmodified\n::\n```", 
-        "#Some readme\n# Repo map\n```\nmodified\n::\n```\n#Some line afterwards" ; 
+        "#Some readme\n# Repo map\n```\noriginal\n::\n```\n#Some line afterwards",
+        "# Repo map\n```\nmodified\n::\n```",
+        "#Some readme\n# Repo map\n```\nmodified\n::\n```\n#Some line afterwards" ;
         "Ensure replaces if the repo map exists"
     )]
     fn test_readme_if_not_already_exists(inp_readme: &str, repo_map: &str, expected_result: &str) {

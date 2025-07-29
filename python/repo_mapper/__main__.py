@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import repo_mapper_py
 
@@ -11,24 +12,27 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--repo-root",
-        type=str,
+        type=os.path.abspath,
         required=True,
         help="Path to the root of the repo to generate the map for.",
     )
     parser.add_argument(
         "--readme-path",
-        type=str,
+        type=os.path.abspath,
         required=True,
         help="Path to the readme file to add the map to.",
     )
     parser.add_argument(
-        "--gitignore-path", type=str, required=True, help="Path to the .gitignore."
+        "--gitignore-path",
+        type=os.path.abspath,
+        required=True,
+        help="Path to the .gitignore.",
     )
     parser.add_argument(
         "--allowed-exts",
-        default=[],
+        default=["py", "md", "toml", "lock", "yaml", "ipynb"],
         type=str_to_list,
-        help="A comma separated string of extensions to remove. E.g. 'py,rs,toml'.",
+        help="A comma separated string of extensions to remove. E.g. 'py,rs,toml'. Defaults to: 'py,md,toml,lock,yaml,ipynb'",
     )
     parser.add_argument(
         "--ignore-dirs",
@@ -41,6 +45,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Flag to ignore hidden files. E.g. those that start with a '.' like '.env'.",
     )
+    parser.add_argument(
+        "--dirs-only",
+        action="store_true",
+        help="Flag to only map directories instead of files",
+    )
     args = parser.parse_args()
     sys.exit(
         int(
@@ -51,6 +60,7 @@ if __name__ == "__main__":
                 allowed_exts=args.allowed_exts,
                 ignore_dirs=args.ignore_dirs,
                 ignore_hidden=args.ignore_hidden,
+                dirs_only=args.dirs_only,
             )
         )
     )

@@ -3,7 +3,7 @@ Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 
 # What it does:
 A CLI tool to scan a code repository and generate a structured file tree map, inserted into your `README.md` written in Rust.
-The map is fenced inside a markdown code block under a `# Repo map` section, if one exists the existing one is replaced, else it is appended to the bottom of the `README.md`. 
+The map is fenced inside a markdown code block under a `# Repo map` section, if one exists the existing one is replaced, else it is appended to the bottom of the `README.md`.
 
 Supported functionality:
 - .gitignore
@@ -34,7 +34,7 @@ python -m repo_mapper \
 
 - Traverses `/path/to/my_repo`
 - Respects files excluded in `.gitignore` or listed in `--ignore-dirs`
-- Includes only files with extensions `.py`, `.rs`, `.toml`
+- Includes only files with extensions `.py`, `.rs`, `.toml`. It's recommended to use this parameter to avoid unexpected files being added to the map.
 - Skips hidden files and directories (those starting with a dot)
 - Inserts or updates the `# Repo map` section in the README
 
@@ -44,10 +44,10 @@ python -m repo_mapper \
 | `--repo-root`      | `str`                 | ✅    | Path to the root of the repository to scan           |
 | `--readme-path`    | `str`                 | ✅    | Path to the README file that will be modified        |
 | `--gitignore-path` | `str`                 | ✅    | Path to the `.gitignore` file                        |
-| `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). If not supplied, all extensions will be evaluated. Note this is overruled by the `.gitignore`.              |
+| `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). Note this is overruled by the `.gitignore`. Defaults to: `'py,md,toml,lock,yaml,ipynb'`.             |
 | `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`.          |
 | `--ignore-hidden`  | Flag (no value)       | ❌     | If set, hidden files and directories will be ignored |
-
+| `--dirs-only`  | Flag (no value)       | ❌     | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
 
 # Repo map
 ```
@@ -71,6 +71,7 @@ python -m repo_mapper \
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs
+├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
 ├── README.md

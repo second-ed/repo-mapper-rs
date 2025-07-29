@@ -1,0 +1,57 @@
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.26
+    hooks:
+      - id: uv-lock
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-yaml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.4
+    hooks:
+    - id: ruff
+      args: [ --fix ]
+    - id: ruff-format
+  - repo: local
+    hooks:
+      - id: build
+        name: build
+        entry: cargo build --verbose
+        language: rust
+        pass_filenames: false
+      - id: fmt
+        name: fmt
+        entry: cargo fmt --all -- --check
+        language: rust
+        pass_filenames: false
+      - id: test
+        name: test
+        entry: cargo test
+        language: rust
+        pass_filenames: false
+      - id: clippy
+        name: clippy
+        entry: cargo clippy
+        language: rust
+        pass_filenames: false
+      - id: repo-map
+        name: repo_map
+        entry: uv run -m repo_mapper
+        language: system
+        pass_filenames: false
+        args:
+          - --repo-root
+          - .
+          - --readme-path
+          - ./README.md
+          - --gitignore-path
+          - ./.gitignore
+          - --allowed-exts
+          - py,rs,md,yaml,toml,lock
+          - --ignore-dirs
+          - .venv,target,.git
+          # - --ignore-hidden
