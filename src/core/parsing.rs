@@ -4,7 +4,6 @@ use regex::Regex;
 use std::{
     collections::HashSet,
     io,
-    ops::Deref,
     path::{Path, PathBuf},
 };
 
@@ -114,6 +113,7 @@ impl GitIgnore {
                 let mut regex_str = String::new();
 
                 regex_str.push_str("(^|/)");
+                let pattern = pattern.trim_start_matches("/");
 
                 for c in pattern.chars() {
                     match c {
@@ -133,14 +133,6 @@ impl GitIgnore {
                 Regex::new(&regex_str).ok()
             })
             .collect()
-    }
-}
-
-impl Deref for GitIgnore {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -173,14 +165,6 @@ impl ReadMe {
             format!("{}\n\n{}", self.0, repo_map)
         };
         ReadMe(updated)
-    }
-}
-
-impl Deref for ReadMe {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -223,13 +207,14 @@ mod tests {
             vec.iter().map(|re| re.as_str()).collect()
         }
 
-        let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py".to_string());
+        let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py\n/outputs/".to_string());
 
         let actual_result = gitignore.parse_lines();
         let expected_result = to_regex_vec(vec![
             "(^|/)\\.pytest_cache/(.*)?$",
             "(^|/)[^/]*\\.log$",
             "(^|/).scratch\\.py$",
+            "(^|/)outputs/(.*)?$",
         ]);
 
         assert_eq!(
@@ -239,8 +224,7 @@ mod tests {
     }
 
     #[test_case(
-        "#Some readme",
-        "appended",
+        "#Some readme", "appended",
         "#Some readme\n\nappended" ;
         "Ensure appends if the repo map doesn't exist"
     )]
