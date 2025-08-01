@@ -36,7 +36,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ignore-dirs",
-        default=[],
+        default=[".git", ".venv", "build", "dist"],
         type=str_to_list,
         help="A comma separated string of directories to ignore. E.g. '.venv,target'.",
     )

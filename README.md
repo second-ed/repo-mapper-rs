@@ -45,7 +45,7 @@ python -m repo_mapper \
 | `--readme-path`    | `str`                 | ✅    | Path to the README file that will be modified        |
 | `--gitignore-path` | `str`                 | ✅    | Path to the `.gitignore` file                        |
 | `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). Note this is overruled by the `.gitignore`. Defaults to: `'py,md,toml,lock,yaml,ipynb'`.             |
-| `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`.          |
+| `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`. Defaults to `".git,.venv,build,dist"`         |
 | `--ignore-hidden`  | Flag (no value)       | ❌     | If set, hidden files and directories will be ignored |
 | `--dirs-only`  | Flag (no value)       | ❌     | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
 
