@@ -50,6 +50,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Flag to only map directories instead of files",
     )
+    parser.add_argument(
+        "--output-mode",
+        choices=["shell", "readme"],
+        default="readme",
+        help="Write to readme file or print to shell",
+    )
     args = parser.parse_args()
     sys.exit(
         int(
@@ -61,6 +67,7 @@ if __name__ == "__main__":
                 ignore_dirs=args.ignore_dirs,
                 ignore_hidden=args.ignore_hidden,
                 dirs_only=args.dirs_only,
+                output_mode=args.output_mode,
             )
         )
     )

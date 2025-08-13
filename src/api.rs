@@ -2,6 +2,7 @@ use crate::core::{adapters::RealFileSystem, domain::RetCode, main};
 use pyo3::prelude::*;
 
 #[pyfunction]
+#[allow(clippy::too_many_arguments)]
 fn py_main(
     repo_root: String,
     readme_path: String,
@@ -10,6 +11,7 @@ fn py_main(
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
     dirs_only: bool,
+    output_mode: String,
 ) -> PyResult<i8> {
     let mut file_sys = RealFileSystem;
 
@@ -22,6 +24,7 @@ fn py_main(
         ignore_dirs,
         ignore_hidden,
         dirs_only,
+        output_mode,
     ) {
         Ok(RetCode::NoModification) => Ok(0),
         Ok(RetCode::ModifiedReadme) => Ok(1),
