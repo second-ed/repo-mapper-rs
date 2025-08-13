@@ -135,6 +135,7 @@ fn test_modify_readme(
         ignore_dirs,
         ignore_hidden,
         dirs_only,
+        "readme".to_string(),
     );
 
     let readme_pathbuf = PathBuf::from("fake/repo/root/README.md");

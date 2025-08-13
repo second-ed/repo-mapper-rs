@@ -5,7 +5,26 @@ use std::{
     collections::HashSet,
     io,
     path::{Path, PathBuf},
+    str::FromStr,
 };
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum OutputMode {
+    Shell,
+    Readme,
+}
+
+impl FromStr for OutputMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "shell" => Ok(OutputMode::Shell),
+            "readme" => Ok(OutputMode::Readme),
+            _ => Err(format!("Invalid output mode {}", s)),
+        }
+    }
+}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Args {
@@ -16,9 +35,11 @@ pub struct Args {
     pub ignore_dirs: HashSet<String>,
     pub ignore_hidden: bool,
     pub dirs_only: bool,
+    pub output_mode: OutputMode,
 }
 
 impl Args {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         repo_root: String,
         readme_path: String,
@@ -27,6 +48,7 @@ impl Args {
         ignore_dirs: Vec<String>,
         ignore_hidden: bool,
         dirs_only: bool,
+        output_mode: String,
     ) -> Self {
         let repo_root = PathBuf::from(repo_root);
         let readme_path = PathBuf::from(readme_path);
@@ -34,6 +56,9 @@ impl Args {
 
         let allowed_exts: HashSet<String> = to_hashset(allowed_exts);
         let ignore_dirs: HashSet<String> = to_hashset(ignore_dirs);
+        let output_mode: OutputMode = output_mode
+            .parse()
+            .expect("Failed to parse the output mode.");
 
         Self {
             repo_root,
@@ -43,6 +68,7 @@ impl Args {
             ignore_dirs,
             ignore_hidden,
             dirs_only,
+            output_mode,
         }
     }
 }
@@ -171,7 +197,10 @@ impl ReadMe {
 #[cfg(test)]
 mod tests {
     use super::{Args, GitIgnore, ReadMe};
-    use crate::core::converters::{to_hashset, to_regex_vec, to_strings};
+    use crate::core::{
+        converters::{to_hashset, to_regex_vec, to_strings},
+        parsing::OutputMode,
+    };
     use regex::Regex;
     use std::path::PathBuf;
     use test_case::test_case;
@@ -186,6 +215,7 @@ mod tests {
             vec![],
             true,
             false,
+            "readme".to_string(),
         );
 
         let expected_result = Args {
@@ -196,6 +226,7 @@ mod tests {
             ignore_dirs: to_hashset(Vec::<&str>::new()),
             ignore_hidden: true,
             dirs_only: false,
+            output_mode: OutputMode::Readme,
         };
 
         assert_eq!(args, expected_result);
