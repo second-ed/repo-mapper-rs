@@ -17,9 +17,9 @@ pub fn main(
     gitignore_path: String,
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
+    output_mode: String,
     ignore_hidden: bool,
     dirs_only: bool,
-    output_mode: String,
 ) -> Result<RetCode, RetCode> {
     let args = Args::new(
         repo_root,
@@ -27,9 +27,9 @@ pub fn main(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
+        output_mode,
         ignore_hidden,
         dirs_only,
-        output_mode,
     );
 
     let gitignore = GitIgnore::parse(file_sys, &args.gitignore_path)?;

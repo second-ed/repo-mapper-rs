@@ -33,9 +33,9 @@ pub struct Args {
     pub gitignore_path: PathBuf,
     pub allowed_exts: HashSet<String>,
     pub ignore_dirs: HashSet<String>,
+    pub output_mode: OutputMode,
     pub ignore_hidden: bool,
     pub dirs_only: bool,
-    pub output_mode: OutputMode,
 }
 
 impl Args {
@@ -46,9 +46,9 @@ impl Args {
         gitignore_path: String,
         allowed_exts: Vec<String>,
         ignore_dirs: Vec<String>,
+        output_mode: String,
         ignore_hidden: bool,
         dirs_only: bool,
-        output_mode: String,
     ) -> Self {
         let repo_root = PathBuf::from(repo_root);
         let readme_path = PathBuf::from(readme_path);
@@ -66,9 +66,9 @@ impl Args {
             gitignore_path,
             allowed_exts,
             ignore_dirs,
+            output_mode,
             ignore_hidden,
             dirs_only,
-            output_mode,
         }
     }
 }
@@ -213,9 +213,9 @@ mod tests {
             ".gitignore".to_string(),
             to_strings(["py", "rs"]),
             vec![],
+            "readme".to_string(),
             true,
             false,
-            "readme".to_string(),
         );
 
         let expected_result = Args {

@@ -133,9 +133,9 @@ fn test_modify_readme(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
+        "readme".to_string(),
         ignore_hidden,
         dirs_only,
-        "readme".to_string(),
     );
 
     let readme_pathbuf = PathBuf::from("fake/repo/root/README.md");

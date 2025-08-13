@@ -39,15 +39,16 @@ python -m repo_mapper \
 - Inserts or updates the `# Repo map` section in the README
 
 # Args
-| Argument           | Type                  | Required | Description                                          |
-| ------------------ | --------------------- | -------- | ---------------------------------------------------- |
-| `--repo-root`      | `str`                 | ✅    | Path to the root of the repository to scan           |
-| `--readme-path`    | `str`                 | ✅    | Path to the README file that will be modified        |
-| `--gitignore-path` | `str`                 | ✅    | Path to the `.gitignore` file                        |
-| `--allowed-exts`   | Comma-separated `str` | ❌    | Extensions to include (e.g. `'py,rs,md'`). Note this is overruled by the `.gitignore`. Defaults to: `'py,md,toml,lock,yaml,ipynb'`.             |
-| `--ignore-dirs`    | Comma-separated `str` | ❌    | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`. Defaults to `".git,.venv,build,dist"`         |
-| `--ignore-hidden`  | Flag (no value)       | ❌     | If set, hidden files and directories will be ignored |
-| `--dirs-only`  | Flag (no value)       | ❌     | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
+| Argument           | Type                  | Required | Default | Description                                          |
+| ------------------ | --------------------- | -------- | ------- | ---------------------------------------------------- |
+| `--repo-root`      | `str`                 | ✅       |  | Path to the root of the repository to scan           |
+| `--readme-path`    | `str`                 | ❌       | `'./README.md'` | Path to the README file that will be modified        |
+| `--gitignore-path` | `str`                 | ❌       | `'./.gitignore'` | Path to the `.gitignore` file                        |
+| `--allowed-exts`   | Comma-separated `str` | ❌       | `'py,md,toml,lock,yaml,ipynb'` | Extensions to include (e.g. `'py,rs,md'`). Note this is overruled by the `.gitignore`.             |
+| `--ignore-dirs`    | Comma-separated `str` | ❌       | `'.git,.venv,build,dist'` | Directories to exclude (e.g. `'.venv,target'`). If not supplied, all directories will be evaluated. Note this is overruled by the `.gitignore`.|
+| `--output-mode`      | `str`        | ❌       | `'readme'` | Output mode to display the tree: `choices=['readme', 'shell']`. |
+| `--ignore-hidden`  | Flag (no value)       | ❌       |  | If set, hidden files and directories will be ignored |
+| `--dirs-only`      | Flag (no value)       | ❌       |  | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
 
 # Repo map
 ```

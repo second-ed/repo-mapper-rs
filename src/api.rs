@@ -9,9 +9,9 @@ fn py_main(
     gitignore_path: String,
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
+    output_mode: String,
     ignore_hidden: bool,
     dirs_only: bool,
-    output_mode: String,
 ) -> PyResult<i8> {
     let mut file_sys = RealFileSystem;
 
@@ -22,9 +22,9 @@ fn py_main(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
+        output_mode,
         ignore_hidden,
         dirs_only,
-        output_mode,
     ) {
         Ok(RetCode::NoModification) => Ok(0),
         Ok(RetCode::ModifiedReadme) => Ok(1),
