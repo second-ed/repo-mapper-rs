@@ -133,6 +133,7 @@ fn test_modify_readme(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
+        "readme".to_string(),
         ignore_hidden,
         dirs_only,
     );

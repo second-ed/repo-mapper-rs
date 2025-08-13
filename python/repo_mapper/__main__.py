@@ -19,13 +19,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--readme-path",
         type=os.path.abspath,
-        required=True,
+        default="./README.md",
         help="Path to the readme file to add the map to.",
     )
     parser.add_argument(
         "--gitignore-path",
         type=os.path.abspath,
-        required=True,
+        default="./.gitignore",
         help="Path to the .gitignore.",
     )
     parser.add_argument(
@@ -36,9 +36,15 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--ignore-dirs",
-        default=[],
+        default=[".git", ".venv", "build", "dist"],
         type=str_to_list,
         help="A comma separated string of directories to ignore. E.g. '.venv,target'.",
+    )
+    parser.add_argument(
+        "--output-mode",
+        choices=["shell", "readme"],
+        default="readme",
+        help="Write to readme file or print to shell",
     )
     parser.add_argument(
         "--ignore-hidden",
@@ -61,6 +67,7 @@ if __name__ == "__main__":
                 ignore_dirs=args.ignore_dirs,
                 ignore_hidden=args.ignore_hidden,
                 dirs_only=args.dirs_only,
+                output_mode=args.output_mode,
             )
         )
     )

@@ -2,12 +2,14 @@ use crate::core::{adapters::RealFileSystem, domain::RetCode, main};
 use pyo3::prelude::*;
 
 #[pyfunction]
+#[allow(clippy::too_many_arguments)]
 fn py_main(
     repo_root: String,
     readme_path: String,
     gitignore_path: String,
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
+    output_mode: String,
     ignore_hidden: bool,
     dirs_only: bool,
 ) -> PyResult<i8> {
@@ -20,6 +22,7 @@ fn py_main(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
+        output_mode,
         ignore_hidden,
         dirs_only,
     ) {

@@ -140,17 +140,17 @@ pub fn filter_dirnames(paths: Vec<PathBuf>) -> Vec<PathBuf> {
     paths
         .into_iter()
         .filter_map(|p| p.parent().map(Path::to_path_buf))
-        .sorted()
         .dedup()
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{filter_paths, FileTree};
+    use super::{filter_dirnames, filter_paths, FileTree};
     use crate::core::converters::{to_hashset, to_pathbufs, to_regex_vec};
     use crate::core::test_utils::get_mock_repo_vec;
     use std::path::PathBuf;
+    use test_case::test_case;
 
     #[test]
     fn test_filter_paths_ignore_hidden() {
@@ -250,6 +250,29 @@ mod tests {
         .join("\n");
 
         let actual_result = FileTree::new().create_map(paths).render();
+
+        assert_eq!(actual_result, expected_result);
+    }
+
+    #[test_case(
+        vec![
+            "path/repo/root/scripts/script_0.py",
+            "path/repo/root/scripts/script_1.py",
+            "path/repo/root/scripts/script_2.py",
+            "path/repo/root/scripts/script_3.py",
+            "path/repo/root/src/src_0.py",
+            "path/repo/root/src/src_1.py",
+            "path/repo/root/src/src_2.py",
+            "path/repo/root/tests/test_0.py",
+            "path/repo/root/tests/test_1.py",
+        ],
+        vec!["path/repo/root/scripts", "path/repo/root/src", "path/repo/root/tests"]
+    )]
+    fn test_filter_dirnames(inp_vec: Vec<&str>, expected_vec: Vec<&str>) {
+        let inp_pathbufs = to_pathbufs(inp_vec);
+        let expected_result = to_pathbufs(expected_vec);
+
+        let actual_result = filter_dirnames(inp_pathbufs);
 
         assert_eq!(actual_result, expected_result);
     }

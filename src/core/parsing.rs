@@ -4,9 +4,27 @@ use regex::Regex;
 use std::{
     collections::HashSet,
     io,
-    ops::Deref,
     path::{Path, PathBuf},
+    str::FromStr,
 };
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum OutputMode {
+    Shell,
+    Readme,
+}
+
+impl FromStr for OutputMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "shell" => Ok(OutputMode::Shell),
+            "readme" => Ok(OutputMode::Readme),
+            _ => Err(format!("Invalid output mode {}", s)),
+        }
+    }
+}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Args {
@@ -15,17 +33,20 @@ pub struct Args {
     pub gitignore_path: PathBuf,
     pub allowed_exts: HashSet<String>,
     pub ignore_dirs: HashSet<String>,
+    pub output_mode: OutputMode,
     pub ignore_hidden: bool,
     pub dirs_only: bool,
 }
 
 impl Args {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         repo_root: String,
         readme_path: String,
         gitignore_path: String,
         allowed_exts: Vec<String>,
         ignore_dirs: Vec<String>,
+        output_mode: String,
         ignore_hidden: bool,
         dirs_only: bool,
     ) -> Self {
@@ -35,6 +56,9 @@ impl Args {
 
         let allowed_exts: HashSet<String> = to_hashset(allowed_exts);
         let ignore_dirs: HashSet<String> = to_hashset(ignore_dirs);
+        let output_mode: OutputMode = output_mode
+            .parse()
+            .expect("Failed to parse the output mode.");
 
         Self {
             repo_root,
@@ -42,6 +66,7 @@ impl Args {
             gitignore_path,
             allowed_exts,
             ignore_dirs,
+            output_mode,
             ignore_hidden,
             dirs_only,
         }
@@ -114,6 +139,7 @@ impl GitIgnore {
                 let mut regex_str = String::new();
 
                 regex_str.push_str("(^|/)");
+                let pattern = pattern.trim_start_matches("/");
 
                 for c in pattern.chars() {
                     match c {
@@ -133,14 +159,6 @@ impl GitIgnore {
                 Regex::new(&regex_str).ok()
             })
             .collect()
-    }
-}
-
-impl Deref for GitIgnore {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -176,18 +194,13 @@ impl ReadMe {
     }
 }
 
-impl Deref for ReadMe {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{Args, GitIgnore, ReadMe};
-    use crate::core::converters::{to_hashset, to_regex_vec, to_strings};
+    use crate::core::{
+        converters::{to_hashset, to_regex_vec, to_strings},
+        parsing::OutputMode,
+    };
     use regex::Regex;
     use std::path::PathBuf;
     use test_case::test_case;
@@ -200,6 +213,7 @@ mod tests {
             ".gitignore".to_string(),
             to_strings(["py", "rs"]),
             vec![],
+            "readme".to_string(),
             true,
             false,
         );
@@ -212,6 +226,7 @@ mod tests {
             ignore_dirs: to_hashset(Vec::<&str>::new()),
             ignore_hidden: true,
             dirs_only: false,
+            output_mode: OutputMode::Readme,
         };
 
         assert_eq!(args, expected_result);
@@ -223,13 +238,14 @@ mod tests {
             vec.iter().map(|re| re.as_str()).collect()
         }
 
-        let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py".to_string());
+        let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py\n/outputs/".to_string());
 
         let actual_result = gitignore.parse_lines();
         let expected_result = to_regex_vec(vec![
             "(^|/)\\.pytest_cache/(.*)?$",
             "(^|/)[^/]*\\.log$",
             "(^|/).scratch\\.py$",
+            "(^|/)outputs/(.*)?$",
         ]);
 
         assert_eq!(
@@ -239,8 +255,7 @@ mod tests {
     }
 
     #[test_case(
-        "#Some readme",
-        "appended",
+        "#Some readme", "appended",
         "#Some readme\n\nappended" ;
         "Ensure appends if the repo map doesn't exist"
     )]
