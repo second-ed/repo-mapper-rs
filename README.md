@@ -1,4 +1,7 @@
 # repo-mapper-rs 🦀
+[![PyPI Downloads](https://static.pepy.tech/badge/repo-mapper-rs)](https://pepy.tech/projects/repo-mapper-rs)
+
+
 Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 
 # What it does:
