@@ -81,6 +81,8 @@ python -m repo_mapper \
 ├── README.md
 ├── pyproject.toml
 └── uv.lock
+
+(generated with repo-mapper-rs)
 ::
 ```
 

@@ -10,9 +10,9 @@ use test_case::test_case;
     vec!["rs", "md", "toml"],
     vec![".venv", "target"],
     true, false,
-    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
+    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```",
     Ok(RetCode::NoModification),
-    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
 #[test_case(
@@ -22,7 +22,7 @@ use test_case::test_case;
     true, true,
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n└── src\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure only shows directories if dirs_only is true"
 )]
 #[test_case(
@@ -31,9 +31,9 @@ use test_case::test_case;
     vec!["rs", "md", "toml", "py"],
     vec![],
     true, false,
-    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```",
+    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```",
     Ok(RetCode::NoModification),
-    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure doesn't ignore directories if given empty vec"
 )]
 #[test_case(
@@ -44,7 +44,7 @@ use test_case::test_case;
     true, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure return Ok(RetCode::ModifiedReadme) if it modifies the README"
 )]
 #[test_case(
@@ -55,7 +55,7 @@ use test_case::test_case;
     false, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure does not skip hidden file"
 )]
 #[test_case(

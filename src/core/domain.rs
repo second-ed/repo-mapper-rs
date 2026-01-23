@@ -66,6 +66,7 @@ impl FileTree {
 
         let mut out = Vec::new();
         _walk(&self.nodes, String::new(), &mut out);
+        out.push("\n(generated with repo-mapper-rs)".to_string());
         format!("# Repo map\n```\n{}\n::\n```", out.join("\n"))
     }
 }
@@ -241,6 +242,7 @@ mod tests {
             "│       └── some_file2.rs",
             "├── Cargo.toml",
             "└── README.md",
+            "\n(generated with repo-mapper-rs)",
             "::",
             "```",
         ]
