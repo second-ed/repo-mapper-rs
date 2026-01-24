@@ -1,7 +1,6 @@
-"""
-repo-map-desc: Main CLI entry point
+"""repo-map-desc: Main CLI entry point
 
-
+This file is the main python entry point for the tool.
 """
 
 import argparse
