@@ -1,11 +1,14 @@
 pub mod adapters;
 pub mod domain;
 pub mod parsing;
-mod test_utils;
 use crate::core::{
     adapters::FileSystem,
     domain::{ret_codes::RetCode, transform::pathbufs_to_filetree},
-    parsing::{Args, GitIgnore, OutputMode, ReadMe},
+    parsing::{
+        args::{Args, OutputMode},
+        gitignore::GitIgnore,
+        readme::ReadMe,
+    },
 };
 use colored::Colorize;
 
@@ -33,17 +36,17 @@ pub fn main(
     );
 
     let gitignored_patterns = GitIgnore::parse(file_sys, &args.gitignore_path)?.parse_lines();
-    let paths: Vec<std::path::PathBuf> = file_sys.list_files(&args.repo_root);
+    let paths: Vec<std::path::PathBuf> = file_sys.list_files(&args.context.repo_root);
 
     let tree = pathbufs_to_filetree(
         file_sys,
         paths,
-        &args.repo_root,
-        &args.allowed_exts,
-        &args.ignore_dirs,
+        &args.context.repo_root,
+        &args.context.allowed_exts,
+        &args.context.ignore_dirs,
         &gitignored_patterns,
-        args.ignore_hidden,
-        args.dirs_only,
+        args.context.ignore_hidden,
+        args.context.dirs_only,
     );
 
     match args.output_mode {

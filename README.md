@@ -73,10 +73,15 @@ python -m repo_mapper \
 │   │   │   ├── ret_codes.rs
 │   │   │   ├── transform.rs  # Where the file tree is generated
 │   │   │   └── utils.rs
+│   │   ├── parsing
+│   │   │   ├── args.rs
+│   │   │   ├── context.rs
+│   │   │   ├── file_text.rs
+│   │   │   ├── gitignore.rs
+│   │   │   ├── mod.rs
+│   │   │   └── readme.rs
 │   │   ├── adapters.rs
-│   │   ├── mod.rs
-│   │   ├── parsing.rs
-│   │   └── test_utils.rs
+│   │   └── mod.rs
 │   ├── api.rs                # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
