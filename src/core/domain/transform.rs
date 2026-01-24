@@ -106,4 +106,15 @@ fn extract_module_desc(code: &str) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::core::domain::transform::extract_module_desc;
+    use test_case::test_case;
+
+    #[test_case("// repo-map-desc: desc\nlet a = 1;", Some("desc".to_string()))]
+    #[test_case("# repo-map-desc: other desc.\na = 1", Some("other desc.".to_string()))]
+    #[test_case("let a = 1;", None)]
+    fn test_extract_module_desc(code: &str, expected_result: Option<String>) {
+        let res = extract_module_desc(code);
+        assert_eq!(res, expected_result);
+    }
+}

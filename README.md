@@ -100,7 +100,7 @@ python -m repo_mapper \
 # Ret codes
 | RetCode               | int | description           |
 | ----------------------| --- | --------------------- |
-| `NoModification`      | 0   | The Repo Map reflects the current state of the repo. |
+| `NoModification`      | 0   | The Repo map reflects the current state of the repo. |
 | `ModifiedReadme`      | 1   | The README was updated. |
 | `FailedParsingFile`   | 2   | Failed to read the file to string. |
 | `FailedToWriteReadme` | 3   | Failed to write the modified README to file. |
