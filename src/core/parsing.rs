@@ -1,4 +1,7 @@
-use crate::core::{adapters::FileSystem, converters::to_hashset, domain::RetCode};
+use crate::core::{
+    adapters::FileSystem,
+    domain::{ret_codes::RetCode, utils::to_collection_of_type},
+};
 use colored::Colorize;
 use regex::Regex;
 use std::{
@@ -54,8 +57,8 @@ impl Args {
         let readme_path = PathBuf::from(readme_path);
         let gitignore_path = PathBuf::from(gitignore_path);
 
-        let allowed_exts: HashSet<String> = to_hashset(allowed_exts);
-        let ignore_dirs: HashSet<String> = to_hashset(ignore_dirs);
+        let allowed_exts: HashSet<String> = to_collection_of_type(allowed_exts);
+        let ignore_dirs: HashSet<String> = to_collection_of_type(ignore_dirs);
         let output_mode: OutputMode = output_mode
             .parse()
             .expect("Failed to parse the output mode.");
@@ -198,32 +201,37 @@ impl ReadMe {
 mod tests {
     use super::{Args, GitIgnore, ReadMe};
     use crate::core::{
-        converters::{to_hashset, to_regex_vec, to_strings},
+        domain::utils::{to_collection_of_type, to_regex_vec},
         parsing::OutputMode,
     };
     use regex::Regex;
-    use std::path::PathBuf;
+    use std::{collections::HashSet, path::PathBuf};
     use test_case::test_case;
 
     #[test]
     fn test_args() {
+        let inp_allowed_exts: Vec<String> = to_collection_of_type(vec!["py", "rs"]);
+
         let args = Args::new(
             "root".to_string(),
             "readme.md".to_string(),
             ".gitignore".to_string(),
-            to_strings(["py", "rs"]),
+            inp_allowed_exts,
             vec![],
             "readme".to_string(),
             true,
             false,
         );
 
+        let allowed_exts: HashSet<String> = to_collection_of_type(vec!["py", "rs"]);
+        let ignore_dirs: HashSet<String> = to_collection_of_type(Vec::<&str>::new());
+
         let expected_result = Args {
             repo_root: PathBuf::from("root"),
             readme_path: PathBuf::from("readme.md"),
             gitignore_path: PathBuf::from(".gitignore"),
-            allowed_exts: to_hashset(vec!["py", "rs"]),
-            ignore_dirs: to_hashset(Vec::<&str>::new()),
+            allowed_exts,
+            ignore_dirs,
             ignore_hidden: true,
             dirs_only: false,
             output_mode: OutputMode::Readme,

@@ -1,5 +1,5 @@
 """
-repo-map-desc: This is a description of this file
+repo-map-desc: Main CLI entry point
 
 
 """

@@ -1,6 +1,8 @@
+// repo-map-desc: Where the file tree is generated
+
 use crate::core::{
     adapters::FileSystem,
-    domain_v2::{file_node::FileNode, repo_file::RepoFile},
+    domain::{file_node::FileNode, file_tree::FileTree, repo_file::RepoFile},
 };
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -10,25 +12,17 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub fn files_to_tree(
+pub fn pathbufs_to_filetree(
     file_sys: &mut impl FileSystem,
     paths: Vec<PathBuf>,
+    root: &PathBuf,
     allowed_exts: &HashSet<String>,
     ignore_dirs: &HashSet<String>,
     gitignored_patterns: &[Regex],
     ignore_hidden: bool,
     dirs_only: bool,
-) {
-    let paths = if dirs_only {
-        filter_dirnames(paths.clone())
-    } else {
-        paths
-    };
-
-    dbg!(&paths);
+) -> FileTree {
     let repo_files = pathbufs_to_repo_files(paths);
-    dbg!(&repo_files);
-
     let repo_files = filter_repo_files(
         repo_files,
         allowed_exts,
@@ -37,22 +31,33 @@ pub fn files_to_tree(
         ignore_hidden,
     );
 
-    dbg!(&repo_files);
+    let repo_files = if dirs_only {
+        filter_dirnames(repo_files.clone())
+    } else {
+        repo_files
+    };
 
-    let file_nodes = repo_file_to_file_node(file_sys, repo_files);
-    dbg!(file_nodes);
+    let file_nodes = repo_file_to_file_node(file_sys, repo_files, root);
+    FileTree::from_file_nodes(&file_nodes)
 }
 
-fn filter_dirnames(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    paths
+fn filter_dirnames(repo_files: Vec<RepoFile>) -> Vec<RepoFile> {
+    repo_files
         .into_iter()
-        .filter_map(|p| p.parent().map(Path::to_path_buf))
+        .map(|repo_file| {
+            let parent_path = repo_file
+                .path
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_default();
+            RepoFile::new(parent_path)
+        })
         .dedup()
         .collect()
 }
 
 fn pathbufs_to_repo_files(paths: Vec<PathBuf>) -> Vec<RepoFile> {
-    paths.into_iter().map(|path| RepoFile::new(path)).collect()
+    paths.into_par_iter().map(RepoFile::new).collect()
 }
 
 fn filter_repo_files(
@@ -76,6 +81,7 @@ fn filter_repo_files(
 fn repo_file_to_file_node(
     file_sys: &mut impl FileSystem,
     repo_files: Vec<RepoFile>,
+    root: &PathBuf,
 ) -> Vec<FileNode> {
     repo_files
         .into_iter()
@@ -87,7 +93,7 @@ fn repo_file_to_file_node(
                 None
             };
 
-            FileNode::from_repo_file(repo_file, desc)
+            FileNode::from_repo_file(repo_file, root, desc)
         })
         .collect()
 }
@@ -98,3 +104,6 @@ fn extract_module_desc(code: &str) -> Option<String> {
         Some(desc.trim().to_string())
     })
 }
+
+#[cfg(test)]
+mod tests {}

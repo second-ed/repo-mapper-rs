@@ -1,5 +1,5 @@
 // repo-map-desc: The translation layer between python and rust
-use crate::core::{adapters::RealFileSystem, domain::RetCode, main};
+use crate::core::{adapters::RealFileSystem, domain::ret_codes::RetCode, main};
 use pyo3::prelude::*;
 
 #[pyfunction]

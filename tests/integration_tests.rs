@@ -1,8 +1,10 @@
-use std::{collections::HashMap, path::PathBuf};
-
+use rayon::prelude::*;
 use repo_mapper_rs::core::{
-    adapters::FakeFileSystem, converters::to_strings, domain::RetCode, main,
+    adapters::FakeFileSystem,
+    domain::{ret_codes::RetCode, utils::to_collection_of_type},
+    main,
 };
+use std::{collections::HashMap, path::PathBuf};
 use test_case::test_case;
 
 #[test_case(
@@ -114,7 +116,7 @@ fn test_modify_readme(
         ("fake/repo/root/scratch.py", ""),
         ("fake/repo/root/secrets/.env", ""),
     ]
-    .into_iter()
+    .into_par_iter()
     .map(|(k, v)| (PathBuf::from(k), v.to_string()))
     .collect::<HashMap<PathBuf, String>>();
 
@@ -123,8 +125,8 @@ fn test_modify_readme(
     let repo_root = "fake/repo/root".to_string();
     let readme_path = readme_path.to_string();
     let gitignore_path = gitignore_path.to_string();
-    let allowed_exts = to_strings(allowed_exts);
-    let ignore_dirs = to_strings(ignore_dirs);
+    let allowed_exts: Vec<String> = to_collection_of_type(allowed_exts);
+    let ignore_dirs: Vec<String> = to_collection_of_type(ignore_dirs);
 
     let exit_code = main(
         &mut file_sys,

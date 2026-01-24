@@ -1,12 +1,12 @@
 pub mod adapters;
-pub mod converters;
 pub mod domain;
-pub mod domain_v2;
 pub mod parsing;
 mod test_utils;
-use crate::core::adapters::FileSystem;
-use crate::core::domain::{filter_dirnames, filter_paths, FileTree, RetCode};
-use crate::core::parsing::{Args, GitIgnore, OutputMode, ReadMe};
+use crate::core::{
+    adapters::FileSystem,
+    domain::{ret_codes::RetCode, transform::pathbufs_to_filetree},
+    parsing::{Args, GitIgnore, OutputMode, ReadMe},
+};
 use colored::Colorize;
 
 #[allow(clippy::too_many_arguments)]
@@ -35,32 +35,16 @@ pub fn main(
     let gitignored_patterns = GitIgnore::parse(file_sys, &args.gitignore_path)?.parse_lines();
     let paths: Vec<std::path::PathBuf> = file_sys.list_files(&args.repo_root);
 
-    let paths: Vec<std::path::PathBuf> = filter_paths(
+    let tree = pathbufs_to_filetree(
+        file_sys,
         paths,
         &args.repo_root,
         &args.allowed_exts,
         &args.ignore_dirs,
         &gitignored_patterns,
         args.ignore_hidden,
+        args.dirs_only,
     );
-
-    // domain_v2::transform::files_to_tree(
-    //     file_sys,
-    //     paths,
-    //     &args.allowed_exts,
-    //     &args.ignore_dirs,
-    //     &gitignored_patterns,
-    //     args.ignore_hidden,
-    //     args.dirs_only,
-    // );
-
-    let paths = if args.dirs_only {
-        filter_dirnames(paths.clone())
-    } else {
-        paths
-    };
-
-    let tree = FileTree::new().create_map(paths);
 
     match args.output_mode {
         OutputMode::Readme => {

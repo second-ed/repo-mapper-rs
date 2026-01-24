@@ -62,22 +62,22 @@ python -m repo_mapper \
 ├── python
 │   └── repo_mapper
 │       ├── __init__.py
-│       └── __main__.py
+│       └── __main__.py       # Main CLI entry point
 ├── src
 │   ├── core
-│   │   ├── domain_v2
+│   │   ├── domain
 │   │   │   ├── file_node.rs
 │   │   │   ├── file_tree.rs
 │   │   │   ├── mod.rs
 │   │   │   ├── repo_file.rs
-│   │   │   └── transform.rs
+│   │   │   ├── ret_codes.rs
+│   │   │   ├── transform.rs  # Where the file tree is generated
+│   │   │   └── utils.rs
 │   │   ├── adapters.rs
-│   │   ├── converters.rs
-│   │   ├── domain.rs
 │   │   ├── mod.rs
 │   │   ├── parsing.rs
 │   │   └── test_utils.rs
-│   ├── api.rs
+│   ├── api.rs                # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs

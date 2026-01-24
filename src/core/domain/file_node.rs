@@ -1,7 +1,7 @@
-use crate::core::domain_v2::repo_file::RepoFile;
+use crate::core::domain::repo_file::RepoFile;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FileNode {
     pub path: PathBuf,
     pub parts: Vec<String>,
@@ -15,8 +15,17 @@ impl FileNode {
         Self { path, parts, desc }
     }
 
-    pub fn from_repo_file(repo_file: RepoFile, desc: Option<String>) -> Self {
-        FileNode::new(repo_file.path, desc)
+    pub fn from_repo_file(repo_file: RepoFile, root: &PathBuf, desc: Option<String>) -> Self {
+        FileNode::new(
+            repo_file
+                .path
+                .as_path()
+                .strip_prefix(root)
+                .ok()
+                .map(|p| p.to_owned())
+                .unwrap_or(repo_file.path),
+            desc,
+        )
     }
 }
 
