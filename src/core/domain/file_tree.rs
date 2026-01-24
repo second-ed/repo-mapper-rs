@@ -5,8 +5,8 @@ use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Default)]
 pub struct FileTree {
-    pub nodes: HashMap<String, FileTree>,
-    pub desc: Option<String>,
+    nodes: HashMap<String, FileTree>,
+    desc: Option<String>,
 }
 
 impl FileTree {
@@ -16,7 +16,7 @@ impl FileTree {
             desc: None,
         }
     }
-    pub fn from_file_nodes(nodes: &[FileNode]) -> Self {
+    pub(crate) fn from_file_nodes(nodes: &[FileNode]) -> Self {
         let mut tree = FileTree::new();
 
         for file in nodes {
