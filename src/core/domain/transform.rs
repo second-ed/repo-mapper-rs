@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn pathbufs_to_filetree(
     file_sys: &mut impl FileSystem,
     paths: Vec<PathBuf>,
