@@ -85,52 +85,13 @@ pub fn filter_paths(
     gitignored_patterns: &[Regex],
     ignore_hidden: bool,
 ) -> Vec<PathBuf> {
-    #[inline(always)]
-    fn _is_hidden(path: &Path) -> bool {
-        path.file_name()
-            .and_then(|s| s.to_str())
-            .map(|s| s.starts_with("."))
-            .unwrap_or(false)
-    }
-
-    #[inline(always)]
-    fn _is_allowed_ext(path: &Path, allowed_exts: &HashSet<String>) -> bool {
-        if allowed_exts.is_empty() {
-            return true;
-        }
-        path.extension()
-            .and_then(ffi::OsStr::to_str)
-            .map(|ext| allowed_exts.contains(ext))
-            .unwrap_or(false)
-    }
-
-    #[inline(always)]
-    fn _is_ignored_dir(path: &Path, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
-        if ignore_dirs.is_empty() {
-            return false;
-        }
-        match path.strip_prefix(root) {
-            Ok(stripped) => stripped.ancestors().any(|anc| {
-                anc.file_name()
-                    .and_then(|name| name.to_str())
-                    .map(|name| ignore_dirs.contains(name))
-                    .unwrap_or(false)
-            }),
-            Err(_) => true,
-        }
-    }
-
-    #[inline(always)]
-    fn _is_gitignored(path: &Path, patterns: &[Regex]) -> bool {
-        let rel_str = path.to_string_lossy();
-        patterns.iter().any(|re| re.is_match(&rel_str))
-    }
-
     paths
         .into_par_iter()
-        .filter(|e| !ignore_hidden || !_is_hidden(e))
-        .filter(|e| _is_allowed_ext(e, allowed_exts))
-        .filter(|e| !_is_ignored_dir(e, root, ignore_dirs))
+        .filter(|e| {
+            (!ignore_hidden || !_is_hidden(e))
+                & _is_allowed_ext(e, allowed_exts)
+                & !_is_ignored_dir(e, root, ignore_dirs)
+        })
         .filter_map(|e| e.as_path().strip_prefix(root).ok().map(|p| p.to_owned()))
         .filter(|p| !_is_gitignored(p, gitignored_patterns))
         .collect()
@@ -143,6 +104,47 @@ pub fn filter_dirnames(paths: Vec<PathBuf>) -> Vec<PathBuf> {
         .filter_map(|p| p.parent().map(Path::to_path_buf))
         .dedup()
         .collect()
+}
+
+#[inline(always)]
+fn _is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|s| s.to_str())
+        .map(|s| s.starts_with("."))
+        .unwrap_or(false)
+}
+
+#[inline(always)]
+fn _is_allowed_ext(path: &Path, allowed_exts: &HashSet<String>) -> bool {
+    if allowed_exts.is_empty() {
+        return true;
+    }
+    path.extension()
+        .and_then(ffi::OsStr::to_str)
+        .map(|ext| allowed_exts.contains(ext))
+        .unwrap_or(false)
+}
+
+#[inline(always)]
+fn _is_ignored_dir(path: &Path, root: &PathBuf, ignore_dirs: &HashSet<String>) -> bool {
+    if ignore_dirs.is_empty() {
+        return false;
+    }
+    match path.strip_prefix(root) {
+        Ok(stripped) => stripped.ancestors().any(|anc| {
+            anc.file_name()
+                .and_then(|name| name.to_str())
+                .map(|name| ignore_dirs.contains(name))
+                .unwrap_or(false)
+        }),
+        Err(_) => true,
+    }
+}
+
+#[inline(always)]
+fn _is_gitignored(path: &Path, patterns: &[Regex]) -> bool {
+    let rel_str = path.to_string_lossy();
+    patterns.iter().any(|re| re.is_match(&rel_str))
 }
 
 #[cfg(test)]

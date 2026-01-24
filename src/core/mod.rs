@@ -1,8 +1,8 @@
 pub mod adapters;
 pub mod converters;
 pub mod domain;
+pub mod domain_v2;
 pub mod parsing;
-
 mod test_utils;
 use crate::core::adapters::FileSystem;
 use crate::core::domain::{filter_dirnames, filter_paths, FileTree, RetCode};
@@ -32,7 +32,7 @@ pub fn main(
         dirs_only,
     );
 
-    let gitignore = GitIgnore::parse(file_sys, &args.gitignore_path)?;
+    let gitignored_patterns = GitIgnore::parse(file_sys, &args.gitignore_path)?.parse_lines();
     let paths: Vec<std::path::PathBuf> = file_sys.list_files(&args.repo_root);
 
     let paths: Vec<std::path::PathBuf> = filter_paths(
@@ -40,9 +40,19 @@ pub fn main(
         &args.repo_root,
         &args.allowed_exts,
         &args.ignore_dirs,
-        &gitignore.parse_lines(),
+        &gitignored_patterns,
         args.ignore_hidden,
     );
+
+    // domain_v2::transform::files_to_tree(
+    //     file_sys,
+    //     paths,
+    //     &args.allowed_exts,
+    //     &args.ignore_dirs,
+    //     &gitignored_patterns,
+    //     args.ignore_hidden,
+    //     args.dirs_only,
+    // );
 
     let paths = if args.dirs_only {
         filter_dirnames(paths.clone())

@@ -65,6 +65,12 @@ python -m repo_mapper \
 │       └── __main__.py
 ├── src
 │   ├── core
+│   │   ├── domain_v2
+│   │   │   ├── file_node.rs
+│   │   │   ├── file_tree.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── repo_file.rs
+│   │   │   └── transform.rs
 │   │   ├── adapters.rs
 │   │   ├── converters.rs
 │   │   ├── domain.rs
