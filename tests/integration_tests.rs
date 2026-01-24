@@ -1,8 +1,10 @@
-use std::{collections::HashMap, path::PathBuf};
-
+use rayon::prelude::*;
 use repo_mapper_rs::core::{
-    adapters::FakeFileSystem, converters::to_strings, domain::RetCode, main,
+    adapters::FakeFileSystem,
+    domain::{ret_codes::RetCode, utils::to_collection_of_type},
+    main,
 };
+use std::{collections::HashMap, path::PathBuf};
 use test_case::test_case;
 
 #[test_case(
@@ -10,9 +12,9 @@ use test_case::test_case;
     vec!["rs", "md", "toml"],
     vec![".venv", "target"],
     true, false,
-    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
+    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```",
     Ok(RetCode::NoModification),
-    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
 #[test_case(
@@ -22,7 +24,7 @@ use test_case::test_case;
     true, true,
     "# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n└── src\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure only shows directories if dirs_only is true"
 )]
 #[test_case(
@@ -31,9 +33,9 @@ use test_case::test_case;
     vec!["rs", "md", "toml", "py"],
     vec![],
     true, false,
-    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```",
+    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```",
     Ok(RetCode::NoModification),
-    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure doesn't ignore directories if given empty vec"
 )]
 #[test_case(
@@ -44,7 +46,7 @@ use test_case::test_case;
     true, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure return Ok(RetCode::ModifiedReadme) if it modifies the README"
 )]
 #[test_case(
@@ -55,7 +57,7 @@ use test_case::test_case;
     false, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure does not skip hidden file"
 )]
 #[test_case(
@@ -114,7 +116,7 @@ fn test_modify_readme(
         ("fake/repo/root/scratch.py", ""),
         ("fake/repo/root/secrets/.env", ""),
     ]
-    .into_iter()
+    .into_par_iter()
     .map(|(k, v)| (PathBuf::from(k), v.to_string()))
     .collect::<HashMap<PathBuf, String>>();
 
@@ -123,8 +125,8 @@ fn test_modify_readme(
     let repo_root = "fake/repo/root".to_string();
     let readme_path = readme_path.to_string();
     let gitignore_path = gitignore_path.to_string();
-    let allowed_exts = to_strings(allowed_exts);
-    let ignore_dirs = to_strings(ignore_dirs);
+    let allowed_exts: Vec<String> = to_collection_of_type(allowed_exts);
+    let ignore_dirs: Vec<String> = to_collection_of_type(ignore_dirs);
 
     let exit_code = main(
         &mut file_sys,

@@ -1,4 +1,7 @@
 # repo-mapper-rs 🦀
+[![PyPI Downloads](https://static.pepy.tech/badge/repo-mapper-rs)](https://pepy.tech/projects/repo-mapper-rs)
+
+
 Rust implementation of [repo_mapper](https://github.com/second-ed/repo_mapper).
 
 # What it does:
@@ -31,7 +34,6 @@ python -m repo_mapper \
   --ignore-hidden
 ```
 ### This command:
-
 - Traverses `/path/to/my_repo`
 - Respects files excluded in `.gitignore` or listed in `--ignore-dirs`
 - Includes only files with extensions `.py`, `.rs`, `.toml`. It's recommended to use this parameter to avoid unexpected files being added to the map.
@@ -50,6 +52,19 @@ python -m repo_mapper \
 | `--ignore-hidden`  | Flag (no value)       | ❌       |  | If set, hidden files and directories will be ignored |
 | `--dirs-only`      | Flag (no value)       | ❌       |  | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
 
+
+<!--
+repo-map-desc: Installation and simple docs
+-->
+
+# New Features:
+### 0.4.0
+- `repo-map-desc`:
+    - adding `repo-map-desc:` to a line will treat everything after `repo-map-desc:` up to the end of the line as a file description.
+    - that description is added to the corresponding file in the repo map
+    - it will ignore any characters before `repo-map-desc:` (e.g. comments or code)
+    - only apply to the first matching line per file
+
 # Repo map
 ```
 ├── .github
@@ -59,32 +74,45 @@ python -m repo_mapper \
 ├── python
 │   └── repo_mapper
 │       ├── __init__.py
-│       └── __main__.py
+│       └── __main__.py       # Main CLI entry point
 ├── src
 │   ├── core
+│   │   ├── domain
+│   │   │   ├── file_node.rs
+│   │   │   ├── file_tree.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── repo_file.rs
+│   │   │   ├── ret_codes.rs
+│   │   │   ├── transform.rs  # Where the file tree is generated
+│   │   │   └── utils.rs
+│   │   ├── parsing
+│   │   │   ├── args.rs
+│   │   │   ├── context.rs
+│   │   │   ├── file_text.rs
+│   │   │   ├── gitignore.rs
+│   │   │   ├── mod.rs
+│   │   │   └── readme.rs
 │   │   ├── adapters.rs
-│   │   ├── converters.rs
-│   │   ├── domain.rs
-│   │   ├── mod.rs
-│   │   ├── parsing.rs
-│   │   └── test_utils.rs
-│   ├── api.rs
+│   │   └── mod.rs
+│   ├── api.rs                # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs
 ├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
-├── README.md
+├── README.md                 # Installation and simple docs
 ├── pyproject.toml
 └── uv.lock
+
+(generated with repo-mapper-rs)
 ::
 ```
 
 # Ret codes
 | RetCode               | int | description           |
 | ----------------------| --- | --------------------- |
-| `NoModification`      | 0   | The Repo Map reflects the current state of the repo. |
+| `NoModification`      | 0   | The Repo map reflects the current state of the repo. |
 | `ModifiedReadme`      | 1   | The README was updated. |
 | `FailedParsingFile`   | 2   | Failed to read the file to string. |
 | `FailedToWriteReadme` | 3   | Failed to write the modified README to file. |
