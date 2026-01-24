@@ -34,7 +34,6 @@ python -m repo_mapper \
   --ignore-hidden
 ```
 ### This command:
-
 - Traverses `/path/to/my_repo`
 - Respects files excluded in `.gitignore` or listed in `--ignore-dirs`
 - Includes only files with extensions `.py`, `.rs`, `.toml`. It's recommended to use this parameter to avoid unexpected files being added to the map.
@@ -52,6 +51,19 @@ python -m repo_mapper \
 | `--output-mode`      | `str`        | ❌       | `'readme'` | Output mode to display the tree: `choices=['readme', 'shell']`. |
 | `--ignore-hidden`  | Flag (no value)       | ❌       |  | If set, hidden files and directories will be ignored |
 | `--dirs-only`      | Flag (no value)       | ❌       |  | If set, only directories and subdirectories will be mapped (useful with larger codebases). |
+
+
+<!--
+repo-map-desc: Installation and simple docs
+-->
+
+# New Features:
+### 0.4.0
+- `repo-map-desc`:
+    - adding `repo-map-desc:` to a line will treat everything after `repo-map-desc:` up to the end of the line as a file description.
+    - that description is added to the corresponding file in the repo map
+    - it will ignore any characters before `repo-map-desc:` (e.g. comments or code)
+    - only apply to the first matching line per file
 
 # Repo map
 ```
@@ -89,7 +101,7 @@ python -m repo_mapper \
 ├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
-├── README.md
+├── README.md                 # Installation and simple docs
 ├── pyproject.toml
 └── uv.lock
 
