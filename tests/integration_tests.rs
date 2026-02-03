@@ -93,6 +93,7 @@ use test_case::test_case;
     "# Some readme\n" ;
     "Ensure Err(FAILURE) if not pointed to valid gitignore."
 )]
+#[allow(clippy::needless_pass_by_value)]
 #[allow(clippy::too_many_arguments)]
 fn test_modify_readme(
     readme_path: &str,
@@ -135,7 +136,7 @@ fn test_modify_readme(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
-        "readme".to_string(),
+        "readme",
         ignore_hidden,
         dirs_only,
     );

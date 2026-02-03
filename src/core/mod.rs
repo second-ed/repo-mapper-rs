@@ -20,7 +20,7 @@ pub fn main(
     gitignore_path: String,
     allowed_exts: Vec<String>,
     ignore_dirs: Vec<String>,
-    output_mode: String,
+    output_mode: &str,
     ignore_hidden: bool,
     dirs_only: bool,
 ) -> Result<RetCode, RetCode> {

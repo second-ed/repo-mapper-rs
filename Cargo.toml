@@ -17,3 +17,17 @@ regex = "1.11.1"
 test-case = "3.3.1"
 unicode-width = "0.2.2"
 walkdir = "2.5.0"
+
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+
+
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+complexity = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+missing_errors_doc = "allow"

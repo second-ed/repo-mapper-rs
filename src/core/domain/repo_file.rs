@@ -15,8 +15,7 @@ impl RepoFile {
         self.path
             .file_name()
             .and_then(|s| s.to_str())
-            .map(|s| s.starts_with("."))
-            .unwrap_or(false)
+            .is_some_and(|s| s.starts_with('.'))
     }
 
     pub(crate) fn is_allowed_ext(&self, allowed_exts: &HashSet<String>) -> bool {
@@ -44,8 +43,7 @@ impl RepoFile {
 fn os_str_contains(os_str: Option<&OsStr>, collection: &HashSet<String>) -> bool {
     os_str
         .and_then(|s| s.to_str())
-        .map(|ext| collection.contains(ext))
-        .unwrap_or(false)
+        .is_some_and(|ext| collection.contains(ext))
 }
 
 #[cfg(test)]

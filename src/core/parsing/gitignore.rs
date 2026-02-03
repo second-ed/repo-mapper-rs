@@ -18,6 +18,7 @@ impl GitIgnore {
         <Self as FileText>::parse(file_sys, path)
     }
 
+    #[must_use]
     pub fn parse_lines(&self) -> Vec<Regex> {
         self.0
             .lines()
@@ -26,7 +27,7 @@ impl GitIgnore {
                 let mut regex_str = String::new();
 
                 regex_str.push_str("(^|/)");
-                let pattern = pattern.trim_start_matches("/");
+                let pattern = pattern.trim_start_matches('/');
 
                 for c in pattern.chars() {
                     match c {
@@ -58,7 +59,7 @@ mod tests {
     #[test]
     fn test_gitignore() {
         fn regex_vec_to_strs(vec: &[Regex]) -> Vec<&str> {
-            vec.iter().map(|re| re.as_str()).collect()
+            vec.iter().map(Regex::as_str).collect()
         }
 
         let gitignore = GitIgnore(".pytest_cache/\n*.log\n?scratch.py\n/outputs/".to_string());

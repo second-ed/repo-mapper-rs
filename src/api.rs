@@ -4,6 +4,8 @@ use pyo3::prelude::*;
 
 #[pyfunction]
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::unnecessary_wraps)]
 fn py_main(
     repo_root: String,
     readme_path: String,
@@ -23,7 +25,7 @@ fn py_main(
         gitignore_path,
         allowed_exts,
         ignore_dirs,
-        output_mode,
+        &output_mode,
         ignore_hidden,
         dirs_only,
     ) {

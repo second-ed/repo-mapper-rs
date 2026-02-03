@@ -22,6 +22,8 @@ impl ReadMe {
         file_sys.write(path, &self.0)
     }
 
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
     pub fn update_readme(&self, repo_map: String) -> ReadMe {
         let pattern = Regex::new(r"(?s)(?m)^# Repo map\n```.*?^::\n```").expect("valid regex");
 

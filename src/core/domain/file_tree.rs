@@ -10,6 +10,7 @@ pub struct FileTree {
 }
 
 impl FileTree {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             nodes: HashMap::new(),
@@ -20,26 +21,26 @@ impl FileTree {
         let mut tree = FileTree::new();
 
         for file in nodes {
-            tree.insert_file(&file.parts, &file.desc);
+            tree.insert_file(&file.parts, file.desc.as_ref());
         }
 
         tree
     }
 
-    fn insert_file(&mut self, parts: &[String], desc: &Option<String>) {
+    fn insert_file(&mut self, parts: &[String], desc: Option<&String>) {
         let mut node = self;
 
         for part in parts {
             node = node.nodes.entry(part.clone()).or_default();
         }
 
-        node.desc = desc.clone();
+        node.desc = desc.cloned();
     }
-
+    #[must_use]
     pub fn render(&self) -> String {
-        fn _walk(
+        fn walk(
             tree: &HashMap<String, FileTree>,
-            prefix: String,
+            prefix: &str,
             out: &mut Vec<(String, Option<String>)>,
         ) {
             let mut items: Vec<_> = tree.iter().collect();
@@ -56,13 +57,13 @@ impl FileTree {
 
                 if !node.nodes.is_empty() {
                     let new_prefix = format!("{prefix}{}", if is_last { "    " } else { "│   " });
-                    _walk(&node.nodes, new_prefix, out);
+                    walk(&node.nodes, &new_prefix, out);
                 }
             }
         }
 
         let mut out = Vec::new();
-        _walk(&self.nodes, String::new(), &mut out);
+        walk(&self.nodes, "", &mut out);
 
         let max_len = out
             .iter()
@@ -74,7 +75,7 @@ impl FileTree {
             .into_par_iter()
             .map(|(line, desc)| {
                 if let Some(desc) = desc {
-                    format!("{:<width$}  # {}", line, desc, width = max_len)
+                    format!("{line:<max_len$}  # {desc}")
                 } else {
                     line
                 }

@@ -14,7 +14,7 @@ impl FromStr for OutputMode {
         match s.to_lowercase().as_str() {
             "shell" => Ok(OutputMode::Shell),
             "readme" => Ok(OutputMode::Readme),
-            _ => Err(format!("Invalid output mode {}", s)),
+            _ => Err(format!("Invalid output mode {s}")),
         }
     }
 }
@@ -28,14 +28,16 @@ pub struct Args {
 }
 
 impl Args {
+    #[must_use]
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::missing_panics_doc)]
     pub fn new(
         repo_root: String,
         readme_path: String,
         gitignore_path: String,
         allowed_exts: Vec<String>,
         ignore_dirs: Vec<String>,
-        output_mode: String,
+        output_mode: &str,
         ignore_hidden: bool,
         dirs_only: bool,
     ) -> Self {
@@ -78,7 +80,7 @@ mod tests {
             ".gitignore".to_string(),
             inp_allowed_exts,
             vec![],
-            "readme".to_string(),
+            "readme",
             true,
             false,
         );
