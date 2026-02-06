@@ -23,6 +23,8 @@ walkdir = "2.5.0"
 opt-level = "s"
 lto = "fat"
 codegen-units = 1
+panic = "abort"
+strip = true
 
 
 [lints.clippy]
