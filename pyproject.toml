@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "repo-mapper-rs"
-version = "0.4.0"
+version = "0.4.1"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -18,7 +18,7 @@ dependencies = []
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "repo_mapper_py"
+module-name = "repo_mapper.repo_mapper_py"
 python-source = "python"
 python-packages = ["repo_mapper"]
 strip = true

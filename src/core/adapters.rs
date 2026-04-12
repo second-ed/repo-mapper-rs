@@ -36,6 +36,7 @@ pub struct FakeFileSystem {
 }
 
 impl FakeFileSystem {
+    #[must_use]
     pub fn new(files: HashMap<PathBuf, String>) -> Self {
         Self {
             files,

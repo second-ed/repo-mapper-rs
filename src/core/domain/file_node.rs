@@ -26,14 +26,13 @@ impl FileNode {
                 .as_path()
                 .strip_prefix(root)
                 .ok()
-                .map(|p| p.to_owned())
+                .map(Path::to_owned)
                 .unwrap_or(repo_file.path),
             desc,
         )
     }
 }
 
-#[inline(always)]
 fn pathbuf_to_parts(path: &Path) -> Vec<String> {
     path.components()
         .map(|c| c.as_os_str().to_string_lossy().to_string())

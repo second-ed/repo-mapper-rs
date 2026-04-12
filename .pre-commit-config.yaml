@@ -16,6 +16,10 @@ repos:
     - id: ruff
       args: [ --fix ]
     - id: ruff-format
+  - repo: https://github.com/bnjbvr/cargo-machete
+    rev: v0.9.1
+    hooks:
+      - id: cargo-machete
   - repo: local
     hooks:
       - id: build

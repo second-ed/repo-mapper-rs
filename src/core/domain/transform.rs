@@ -13,6 +13,7 @@ use std::{
 };
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub fn pathbufs_to_filetree(
     file_sys: &mut impl FileSystem,
     paths: Vec<PathBuf>,
@@ -111,6 +112,7 @@ mod tests {
     use crate::core::domain::transform::extract_module_desc;
     use test_case::test_case;
 
+    #[allow(clippy::needless_pass_by_value)]
     #[test_case("// repo-map-desc: desc\nlet a = 1;", Some("desc".to_string()))]
     #[test_case("# repo-map-desc: other desc.\na = 1", Some("other desc.".to_string()))]
     #[test_case("let a = 1;", None)]

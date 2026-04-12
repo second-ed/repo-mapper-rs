@@ -6,7 +6,7 @@ This file is the main python entry point for the tool.
 import argparse
 import os
 import sys
-import repo_mapper_py
+from repo_mapper import repo_mapper_py
 
 if __name__ == "__main__":
 

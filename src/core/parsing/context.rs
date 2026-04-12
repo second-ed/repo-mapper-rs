@@ -12,6 +12,7 @@ pub struct Context {
 }
 
 impl Context {
+    #[must_use]
     pub fn new(
         repo_root: String,
         allowed_exts: Vec<String>,
