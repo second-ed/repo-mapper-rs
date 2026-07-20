@@ -71,10 +71,12 @@ repo-map-desc: Installation and simple docs
 │   └── workflows
 │       ├── ci.yaml
 │       └── publish.yaml
+├── benches
+│   └── repo_mapper_rs_benchmark.rs
 ├── python
 │   └── repo_mapper
 │       ├── __init__.py
-│       └── __main__.py       # Main CLI entry point
+│       └── __main__.py              # Main CLI entry point
 ├── src
 │   ├── core
 │   │   ├── domain
@@ -83,7 +85,7 @@ repo-map-desc: Installation and simple docs
 │   │   │   ├── mod.rs
 │   │   │   ├── repo_file.rs
 │   │   │   ├── ret_codes.rs
-│   │   │   ├── transform.rs  # Where the file tree is generated
+│   │   │   ├── transform.rs         # Where the file tree is generated
 │   │   │   └── utils.rs
 │   │   ├── parsing
 │   │   │   ├── args.rs
@@ -94,14 +96,14 @@ repo-map-desc: Installation and simple docs
 │   │   │   └── readme.rs
 │   │   ├── adapters.rs
 │   │   └── mod.rs
-│   ├── api.rs                # The translation layer between python and rust
+│   ├── api.rs                       # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs
 ├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
-├── README.md                 # Installation and simple docs
+├── README.md                        # Installation and simple docs
 ├── pyproject.toml
 └── uv.lock
 
