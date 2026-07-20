@@ -118,6 +118,7 @@ fn test_modify_readme(
         ("fake/repo/root/secrets/.env", ""),
     ]
     .into_par_iter()
+    .with_min_len(1_000)
     .map(|(k, v)| (PathBuf::from(k), v.to_string()))
     .collect::<HashMap<PathBuf, String>>();
 

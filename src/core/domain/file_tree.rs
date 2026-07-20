@@ -73,6 +73,7 @@ impl FileTree {
 
         let padded_lines: Vec<String> = out
             .into_par_iter()
+            .with_min_len(1_000)
             .map(|(line, desc)| {
                 if let Some(desc) = desc {
                     format!("{line:<max_len$}  # {desc}")
