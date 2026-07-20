@@ -74,7 +74,8 @@ fn filter_repo_files(
     ignore_hidden: bool,
 ) -> Vec<RepoFile> {
     repo_files
-        .into_iter()
+        .into_par_iter()
+        .with_min_len(1_000)
         .filter(|file| {
             (!ignore_hidden || !file.is_hidden())
                 & file.is_allowed_ext(allowed_exts)
