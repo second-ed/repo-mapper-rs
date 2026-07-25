@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "don't want to run a bench every time I run the tests"]
     fn new_repo_file() {
         let mut criterion = Criterion::default();
         let path = PathBuf::from("fake/repo/root/src/lib.rs");
