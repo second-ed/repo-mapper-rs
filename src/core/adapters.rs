@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs, io,
     path::{Path, PathBuf},
 };
@@ -7,7 +7,12 @@ use std::{
 use walkdir::WalkDir;
 
 pub trait FileSystem {
-    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf>;
+    fn list_files(
+        &mut self,
+        path: impl AsRef<Path>,
+        ignore_dirs: &HashSet<String>,
+        ignore_hidden: bool,
+    ) -> Vec<PathBuf>;
 
     fn is_file(&self, path: &Path) -> bool;
 
@@ -19,9 +24,15 @@ pub trait FileSystem {
 pub struct RealFileSystem;
 
 impl FileSystem for RealFileSystem {
-    fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf> {
+    fn list_files(
+        &mut self,
+        path: impl AsRef<Path>,
+        ignore_dirs: &HashSet<String>,
+        ignore_hidden: bool,
+    ) -> Vec<PathBuf> {
         WalkDir::new(path)
             .into_iter()
+            .filter_entry(|e| continue_walking(e.path(), ignore_dirs, ignore_hidden))
             .filter_map(Result::ok)
             .map(|e| e.path().to_owned())
             .collect()
@@ -62,8 +73,17 @@ impl Default for FakeFileSystem {
 }
 
 impl FileSystem for FakeFileSystem {
-    fn list_files(&mut self, _path: impl AsRef<Path>) -> Vec<PathBuf> {
-        self.files.keys().cloned().collect()
+    fn list_files(
+        &mut self,
+        path: impl AsRef<Path>,
+        ignore_dirs: &HashSet<String>,
+        ignore_hidden: bool,
+    ) -> Vec<PathBuf> {
+        self.files
+            .keys()
+            .filter(|p| p.starts_with(&path) && continue_walking(p, ignore_dirs, ignore_hidden))
+            .cloned()
+            .collect()
     }
 
     fn is_file(&self, path: &Path) -> bool {
@@ -85,4 +105,23 @@ impl FileSystem for FakeFileSystem {
             .insert(path.to_path_buf(), contents.to_string().clone());
         Ok(())
     }
+}
+
+fn continue_walking(path: &Path, ignore_dirs: &HashSet<String>, ignore_hidden: bool) -> bool {
+    let name = path.file_name().and_then(|name| name.to_str());
+
+    if is_hidden(ignore_hidden, name) || is_ignored_dir(ignore_dirs, name) {
+        return false;
+    }
+    true
+}
+
+#[inline]
+fn is_hidden(ignore_hidden: bool, name: Option<&str>) -> bool {
+    ignore_hidden && name.is_some_and(|name| name.starts_with('.'))
+}
+
+#[inline]
+fn is_ignored_dir(ignore_dirs: &HashSet<String>, name: Option<&str>) -> bool {
+    !ignore_dirs.is_empty() && name.is_some_and(|name| ignore_dirs.contains(name))
 }

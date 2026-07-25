@@ -47,7 +47,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 black_box(ignore_hidden),
                 black_box(dirs_only),
             )
-        })
+        });
     });
 }
 

@@ -45,7 +45,7 @@ pub fn pathbufs_to_filetree(
 
 fn filter_dirnames(repo_files: &[RepoFile]) -> Vec<RepoFile> {
     repo_files
-        .into_iter()
+        .iter()
         .map(|repo_file| {
             let parent_path = repo_file
                 .path
@@ -78,10 +78,10 @@ fn filter_repo_files(
         .into_par_iter()
         .with_min_len(1_000)
         .filter(|file| {
-            (!ignore_hidden || !file.is_hidden())
-                && file.is_allowed_ext(allowed_exts)
-                && !file.is_ignored_dir(ignore_dirs)
+            file.is_allowed_ext(allowed_exts)
                 && !file.is_gitignored(gitignored_patterns)
+                && (!ignore_hidden || !file.is_hidden())
+                && !file.is_ignored_dir(ignore_dirs)
         })
         .collect()
 }

@@ -121,7 +121,7 @@ mod tests {
         let path = PathBuf::from("fake/repo/root/src/lib.rs");
 
         criterion.bench_function("repo_file", |b| {
-            b.iter(|| RepoFile::new(black_box(path.clone())))
+            b.iter(|| RepoFile::new(black_box(path.clone())));
         });
         criterion.final_summary();
     }
