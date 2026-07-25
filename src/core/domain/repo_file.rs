@@ -18,7 +18,7 @@ impl RepoFile {
     pub(crate) fn is_hidden(&self) -> bool {
         self.path
             .components()
-            .map(|p| p.as_os_str().to_str().unwrap_or_default().to_owned())
+            .map(|p| p.as_os_str().to_str().unwrap_or_default())
             .any(|s| s.starts_with('.'))
     }
 
