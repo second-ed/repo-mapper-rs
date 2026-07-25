@@ -54,6 +54,7 @@ fn filter_dirnames(repo_files: Vec<RepoFile>) -> Vec<RepoFile> {
                 .unwrap_or_default();
             RepoFile::new(parent_path)
         })
+        .sorted()
         .dedup()
         .collect()
 }
@@ -93,7 +94,7 @@ fn repo_file_to_file_node(
     repo_files
         .into_iter()
         .map(|repo_file| {
-            let desc = if repo_file.path.is_file() {
+            let desc = if file_sys.is_file(&repo_file.path) {
                 let code = file_sys.read_to_string(&repo_file.path);
                 extract_module_desc(&code.unwrap_or_default())
             } else {

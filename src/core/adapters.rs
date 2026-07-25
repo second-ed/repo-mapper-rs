@@ -8,7 +8,11 @@ use walkdir::WalkDir;
 
 pub trait FileSystem {
     fn list_files(&mut self, path: impl AsRef<Path>) -> Vec<PathBuf>;
+
+    fn is_file(&self, path: &Path) -> bool;
+
     fn read_to_string(&mut self, path: &Path) -> io::Result<String>;
+
     fn write(&mut self, path: &Path, contents: &str) -> std::result::Result<(), std::io::Error>;
 }
 
@@ -22,9 +26,15 @@ impl FileSystem for RealFileSystem {
             .map(|e| e.path().to_owned())
             .collect()
     }
+
+    fn is_file(&self, path: &Path) -> bool {
+        path.is_file()
+    }
+
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {
         fs::read_to_string(path)
     }
+
     fn write(&mut self, path: &Path, contents: &str) -> std::result::Result<(), std::io::Error> {
         fs::write(path, contents)
     }
@@ -55,6 +65,11 @@ impl FileSystem for FakeFileSystem {
     fn list_files(&mut self, _path: impl AsRef<Path>) -> Vec<PathBuf> {
         self.files.keys().cloned().collect()
     }
+
+    fn is_file(&self, path: &Path) -> bool {
+        self.files.contains_key(path)
+    }
+
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {
         self.operations.push(format!("read: `{}`", path.display()));
         if let Some(contents) = self.files.get(path) {
@@ -63,6 +78,7 @@ impl FileSystem for FakeFileSystem {
             Err(io::Error::new(io::ErrorKind::NotFound, "File not found"))
         }
     }
+
     fn write(&mut self, path: &Path, contents: &str) -> std::result::Result<(), std::io::Error> {
         self.operations.push(format!("write: `{}`", path.display()));
         self.files

@@ -1,23 +1,25 @@
 use regex::Regex;
-use std::{collections::HashSet, path::PathBuf};
+use std::{
+    collections::HashSet,
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
 pub(crate) struct RepoFile {
     pub path: PathBuf,
-    pub parts: Vec<String>,
 }
 
 impl RepoFile {
     pub(crate) fn new(path: PathBuf) -> Self {
-        let parts = path
-            .components()
-            .map(|p| p.as_os_str().to_str().unwrap_or_default().to_owned())
-            .collect();
-        Self { path, parts }
+        Self { path }
     }
 
     pub(crate) fn is_hidden(&self) -> bool {
-        self.parts.iter().any(|s| s.starts_with('.'))
+        self.path
+            .components()
+            .map(|p| p.as_os_str().to_str().unwrap_or_default().to_owned())
+            .any(|s| s.starts_with('.'))
     }
 
     pub(crate) fn is_allowed_ext(&self, allowed_exts: &HashSet<String>) -> bool {
@@ -34,9 +36,12 @@ impl RepoFile {
         if ignore_dirs.is_empty() {
             return false;
         }
-        self.parts[0..self.parts.len() - 1]
-            .iter()
-            .any(|p| ignore_dirs.contains(p))
+        self.path
+            .parent()
+            .into_iter()
+            .flat_map(Path::ancestors)
+            .filter_map(|path| path.file_name().and_then(OsStr::to_str))
+            .any(|name| ignore_dirs.contains(name))
     }
 
     pub(crate) fn is_gitignored(&self, patterns: &[Regex]) -> bool {
