@@ -4,18 +4,20 @@ use std::{collections::HashSet, ffi::OsStr, path::PathBuf};
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
 pub(crate) struct RepoFile {
     pub path: PathBuf,
+    pub parts: Vec<String>,
 }
 
 impl RepoFile {
     pub(crate) fn new(path: PathBuf) -> Self {
-        Self { path }
+        let parts = path
+            .components()
+            .map(|p| p.as_os_str().to_str().unwrap_or_default().to_owned())
+            .collect();
+        Self { path, parts }
     }
 
     pub(crate) fn is_hidden(&self) -> bool {
-        self.path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .is_some_and(|s| s.starts_with('.'))
+        self.parts.iter().any(|s| s.starts_with('.'))
     }
 
     pub(crate) fn is_allowed_ext(&self, allowed_exts: &HashSet<String>) -> bool {
@@ -29,9 +31,9 @@ impl RepoFile {
         if ignore_dirs.is_empty() {
             return false;
         }
-        self.path
-            .ancestors()
-            .any(|anc| os_str_contains(anc.file_name(), ignore_dirs))
+        self.parts[0..self.parts.len() - 1]
+            .iter()
+            .any(|p| ignore_dirs.contains(p))
     }
 
     pub(crate) fn is_gitignored(&self, patterns: &[Regex]) -> bool {
@@ -52,12 +54,13 @@ mod tests {
         repo_file::RepoFile,
         utils::{to_collection_of_type, to_regex_vec, to_str_type},
     };
+    use criterion::{black_box, Criterion};
     use std::{collections::HashSet, path::PathBuf};
     use test_case::test_case;
 
     #[test_case("src/subdir/file.rs", false ; "normal file returns false")]
     #[test_case(".gitignore", true ; "hidden file returns true")]
-    #[test_case(".venv/some_dir/some_file.py", false ; "doesn't ignore hidden dir")]
+    #[test_case(".venv/some_dir/some_file.py", true ; "should ignore hidden dir")]
     fn test_repo_file_is_hidden(inp_str: &str, expected_result: bool) {
         let inp_path: PathBuf = to_str_type(inp_str);
         let repo_file = RepoFile::new(inp_path);
@@ -107,5 +110,17 @@ mod tests {
         let repo_file = RepoFile::new(inp_path);
 
         assert_eq!(repo_file.is_gitignored(&regex_patterns), expected_result);
+    }
+
+    #[test]
+    #[ignore]
+    fn new_repo_file() {
+        let mut criterion = Criterion::default();
+        let path = PathBuf::from("fake/repo/root/src/lib.rs");
+
+        criterion.bench_function("repo_file", |b| {
+            b.iter(|| RepoFile::new(black_box(path.clone())))
+        });
+        criterion.final_summary();
     }
 }
