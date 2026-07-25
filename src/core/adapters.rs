@@ -56,7 +56,7 @@ impl FileSystem for FakeFileSystem {
         self.files.keys().cloned().collect()
     }
     fn read_to_string(&mut self, path: &Path) -> io::Result<String> {
-        self.operations.push(format!("read: `{}`", &path.display()));
+        self.operations.push(format!("read: `{}`", path.display()));
         if let Some(contents) = self.files.get(path) {
             Ok(contents.to_owned())
         } else {
@@ -64,8 +64,7 @@ impl FileSystem for FakeFileSystem {
         }
     }
     fn write(&mut self, path: &Path, contents: &str) -> std::result::Result<(), std::io::Error> {
-        self.operations
-            .push(format!("write: `{}`", &path.display()));
+        self.operations.push(format!("write: `{}`", path.display()));
         self.files
             .insert(path.to_path_buf(), contents.to_string().clone());
         Ok(())
