@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::{collections::HashSet, ffi::OsStr, path::PathBuf};
+use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
 pub(crate) struct RepoFile {
@@ -24,7 +24,10 @@ impl RepoFile {
         if allowed_exts.is_empty() {
             return true;
         }
-        os_str_contains(self.path.extension(), allowed_exts)
+        self.path
+            .extension()
+            .and_then(|s| s.to_str())
+            .is_some_and(|ext| allowed_exts.contains(ext))
     }
 
     pub(crate) fn is_ignored_dir(&self, ignore_dirs: &HashSet<String>) -> bool {
@@ -40,12 +43,6 @@ impl RepoFile {
         let rel_str = self.path.to_string_lossy();
         patterns.iter().any(|re| re.is_match(&rel_str))
     }
-}
-
-fn os_str_contains(os_str: Option<&OsStr>, collection: &HashSet<String>) -> bool {
-    os_str
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| collection.contains(ext))
 }
 
 #[cfg(test)]
