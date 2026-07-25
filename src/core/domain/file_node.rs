@@ -3,20 +3,22 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct FileNode {
-    pub path: PathBuf,
     pub parts: Vec<String>,
     pub desc: Option<String>,
 }
 
 impl FileNode {
-    pub(crate) fn new(path: PathBuf, desc: Option<String>) -> Self {
-        let parts = pathbuf_to_parts(&path);
+    pub(crate) fn new(path: &Path, desc: Option<String>) -> Self {
+        let parts = path
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy().to_string())
+            .collect();
 
-        Self { path, parts, desc }
+        Self { parts, desc }
     }
 
     pub(crate) fn from_repo_file(
-        repo_file: RepoFile,
+        repo_file: &RepoFile,
         root: &PathBuf,
         desc: Option<String>,
     ) -> Self {
@@ -25,16 +27,8 @@ impl FileNode {
                 .path
                 .as_path()
                 .strip_prefix(root)
-                .ok()
-                .map(Path::to_owned)
-                .unwrap_or(repo_file.path),
+                .unwrap_or(&repo_file.path),
             desc,
         )
     }
-}
-
-fn pathbuf_to_parts(path: &Path) -> Vec<String> {
-    path.components()
-        .map(|c| c.as_os_str().to_string_lossy().to_string())
-        .collect()
 }

@@ -34,16 +34,16 @@ pub fn pathbufs_to_filetree(
     );
 
     let repo_files = if dirs_only {
-        filter_dirnames(repo_files.clone())
+        filter_dirnames(&repo_files)
     } else {
         repo_files
     };
 
-    let file_nodes = repo_file_to_file_node(file_sys, repo_files, root);
+    let file_nodes = repo_file_to_file_node(file_sys, &repo_files, root);
     FileTree::from_file_nodes(&file_nodes)
 }
 
-fn filter_dirnames(repo_files: Vec<RepoFile>) -> Vec<RepoFile> {
+fn filter_dirnames(repo_files: &[RepoFile]) -> Vec<RepoFile> {
     repo_files
         .into_iter()
         .map(|repo_file| {
@@ -88,11 +88,11 @@ fn filter_repo_files(
 
 fn repo_file_to_file_node(
     file_sys: &mut impl FileSystem,
-    repo_files: Vec<RepoFile>,
+    repo_files: &[RepoFile],
     root: &PathBuf,
 ) -> Vec<FileNode> {
     repo_files
-        .into_iter()
+        .iter()
         .map(|repo_file| {
             let desc = if file_sys.is_file(&repo_file.path) {
                 let code = file_sys.read_to_string(&repo_file.path);
