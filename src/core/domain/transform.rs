@@ -78,9 +78,9 @@ fn filter_repo_files(
         .with_min_len(1_000)
         .filter(|file| {
             (!ignore_hidden || !file.is_hidden())
-                & file.is_allowed_ext(allowed_exts)
-                & !file.is_ignored_dir(ignore_dirs)
-                & !file.is_gitignored(gitignored_patterns)
+                && file.is_allowed_ext(allowed_exts)
+                && !file.is_ignored_dir(ignore_dirs)
+                && !file.is_gitignored(gitignored_patterns)
         })
         .collect()
 }
