@@ -32,7 +32,9 @@ impl FileSystem for RealFileSystem {
     ) -> Vec<PathBuf> {
         WalkDir::new(path)
             .into_iter()
-            .filter_entry(|e| continue_walking(e.path(), ignore_dirs, ignore_hidden))
+            .filter_entry(|e| {
+                !e.file_type().is_dir() || continue_walking(e.path(), ignore_dirs, ignore_hidden)
+            })
             .filter_map(Result::ok)
             .map(|e| e.path().to_owned())
             .collect()
@@ -81,7 +83,13 @@ impl FileSystem for FakeFileSystem {
     ) -> Vec<PathBuf> {
         self.files
             .keys()
-            .filter(|p| p.starts_with(&path) && continue_walking(p, ignore_dirs, ignore_hidden))
+            .filter(|p| {
+                p.starts_with(&path)
+                    && p.parent()
+                        .into_iter()
+                        .flat_map(Path::ancestors)
+                        .any(|parent| continue_walking(parent, ignore_dirs, ignore_hidden))
+            })
             .cloned()
             .collect()
     }

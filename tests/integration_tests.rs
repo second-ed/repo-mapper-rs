@@ -46,7 +46,7 @@ use test_case::test_case;
     true, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n├── scratch.py\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure return Ok(RetCode::ModifiedReadme) if it modifies the README"
 )]
 #[test_case(
@@ -57,7 +57,7 @@ use test_case::test_case;
     false, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n├── scratch.py\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure does not skip hidden file"
 )]
 #[test_case(
@@ -110,6 +110,7 @@ fn test_modify_readme(
         ("fake/repo/root/src/main.rs", "let x = 1;"),
         ("fake/repo/root/src/lib.rs", "use std;"),
         ("fake/repo/root/Cargo.toml", ""),
+        ("fake/repo/root/src", ""),
         ("fake/repo/root/README.md", current_readme),
         ("fake/repo/root/.gitignore", "target/"),
         ("fake/repo/root/target/some_build.rs", ""),
