@@ -54,8 +54,7 @@ fn filter_dirnames(repo_files: &[RepoFile]) -> Vec<RepoFile> {
                 .unwrap_or_default();
             RepoFile::new(parent_path)
         })
-        .sorted()
-        .dedup()
+        .unique_by(|repo_file| repo_file.path.clone())
         .collect()
 }
 
