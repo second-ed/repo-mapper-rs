@@ -73,8 +73,22 @@ impl ExpectedResult {
 
 fn given_valid_input_data_when_called_then_should_not_modify_the_readme(
 ) -> (InputData, ExpectedResult) {
-    let current_readme = ["# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```"];
-    let expected_readme = ["# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n\n(generated with repo-mapper-rs)\n::\n```"];
+    let current_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── src",
+        "│   ├── lib.rs",
+        "│   └── main.rs",
+        "├── Cargo.toml",
+        "└── README.md",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
 
     (
         InputData::new(
@@ -86,24 +100,48 @@ fn given_valid_input_data_when_called_then_should_not_modify_the_readme(
             false,
             &current_readme,
         ),
-        ExpectedResult::new(Ok(RetCode::NoModification), &expected_readme),
+        ExpectedResult::new(Ok(RetCode::NoModification), &current_readme),
     )
 }
 
-fn given_valid_input_data_when_called_with_dirs_only_then_should_not_modify_the_readme(
+fn given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_readme(
 ) -> (InputData, ExpectedResult) {
-    let current_readme = ["# Some readme\n\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n└── README.md\n::\n```"];
+    let current_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── src",
+        "│   ├── lib.rs",
+        "│   └── main.rs",
+        "├── Cargo.toml",
+        "└── README.md",
+        "::",
+        "```",
+    ];
     let expected_readme = [
-        "# Some readme\n\n\n# Repo map\n```\n└── src\n\n(generated with repo-mapper-rs)\n::\n```",
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── .venv",
+        "│   └── site-packages",
+        "└── src",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
     ];
 
     (
         InputData::new(
             "README.md",
             ".gitignore",
-            vec!["rs", "md", "toml"],
-            vec![".venv", "target"],
-            true,
+            vec!["rs", "md", "toml", "py"],
+            vec![],
+            false,
             true,
             &current_readme,
         ),
@@ -113,8 +151,43 @@ fn given_valid_input_data_when_called_with_dirs_only_then_should_not_modify_the_
 
 fn given_empty_ignore_dirs_when_called_then_should_not_ignore_directories(
 ) -> (InputData, ExpectedResult) {
-    let current_readme = ["# Some readme\n`\n\n# Repo map\n```\n├── .venv\n│   └── site-packages\n│       └── some_package.py\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```"];
-    let expected_readme = ["# Some readme\n`\n\n# Repo map\n```\n├── src\n│   ├── lib.rs\n│   └── main.rs\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```"];
+    let current_readme = [
+        "# Some readme",
+        "`",
+        "",
+        "# Repo map",
+        "```",
+        "├── .venv",
+        "│   └── site-packages",
+        "│       └── some_package.py",
+        "├── src",
+        "│   ├── lib.rs",
+        "│   └── main.rs",
+        "├── Cargo.toml",
+        "├── README.md",
+        "└── scratch.py",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
+    let expected_readme = [
+        "# Some readme",
+        "`",
+        "",
+        "# Repo map",
+        "```",
+        "├── src",
+        "│   ├── lib.rs",
+        "│   └── main.rs",
+        "├── Cargo.toml",
+        "├── README.md",
+        "└── scratch.py",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
 
     (
         InputData::new(
@@ -133,7 +206,20 @@ fn given_empty_ignore_dirs_when_called_then_should_not_ignore_directories(
 fn given_ignored_directories_when_called_then_should_modify_the_readme(
 ) -> (InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
-    let expected_readme = ["# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```",];
+    let expected_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── Cargo.toml",
+        "├── README.md",
+        "└── scratch.py",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
 
     (
         InputData::new(
@@ -152,7 +238,23 @@ fn given_ignored_directories_when_called_then_should_modify_the_readme(
 fn given_hidden_files_when_called_without_ignore_hidden_then_should_include_them(
 ) -> (InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
-    let expected_readme = ["# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```"];
+    let expected_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── secrets",
+        "│   └── .env",
+        "├── .gitignore",
+        "├── Cargo.toml",
+        "├── README.md",
+        "└── scratch.py",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
 
     (
         InputData::new(
@@ -230,7 +332,7 @@ fn given_invalid_gitignore_filename_when_called_then_should_return_invalid_filen
     "Ensure returns Ok(RetCode::NoModification)) when README is not modified"
 )]
 #[test_case(
-    given_valid_input_data_when_called_with_dirs_only_then_should_not_modify_the_readme() ;
+    given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_readme() ;
     "Ensure only shows directories if dirs_only is true"
 )]
 #[test_case(
