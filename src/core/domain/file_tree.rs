@@ -1,4 +1,4 @@
-use crate::core::domain::file_node::FileNode;
+use crate::core::domain::repo_entry::RepoEntry;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use unicode_width::UnicodeWidthStr;
@@ -7,6 +7,7 @@ use unicode_width::UnicodeWidthStr;
 pub struct FileTree {
     nodes: HashMap<String, FileTree>,
     desc: Option<String>,
+    is_dir: bool,
 }
 
 impl FileTree {
@@ -15,27 +16,41 @@ impl FileTree {
         Self {
             nodes: HashMap::new(),
             desc: None,
+            is_dir: true,
         }
     }
-    pub(crate) fn from_file_nodes(nodes: &[FileNode]) -> Self {
+    pub(crate) fn from_repo_entries(entries: &[RepoEntry]) -> Self {
         let mut tree = FileTree::new();
 
-        for file in nodes {
-            tree.insert_file(&file.parts, file.desc.as_ref());
+        for entry in entries {
+            tree.insert_entry(entry);
         }
 
         tree
     }
 
-    fn insert_file(&mut self, parts: &[String], desc: Option<&String>) {
+    fn insert_entry(&mut self, entry: &RepoEntry) {
         let mut node = self;
 
-        for part in parts {
-            node = node.nodes.entry(part.clone()).or_default();
+        let mut components = entry.path().components().peekable();
+
+        while let Some(component) = components.next() {
+            let name = component.as_os_str().to_string_lossy().into_owned();
+            node = node.nodes.entry(name).or_default();
+
+            // every component before the final one is a dir
+            if components.peek().is_some() {
+                node.is_dir = true;
+            }
         }
 
-        node.desc = desc.cloned();
+        node.is_dir |= entry.is_dir();
+
+        if let Some(desc) = entry.desc() {
+            node.desc = Some(desc.to_owned());
+        }
     }
+
     #[must_use]
     pub fn render(&self) -> String {
         fn walk(
@@ -46,7 +61,7 @@ impl FileTree {
             let mut items: Vec<_> = tree.iter().collect();
 
             // Sort directories before files
-            items.sort_by_key(|(name, node)| (node.nodes.is_empty(), name.to_owned()));
+            items.sort_by_key(|(name, node)| (!node.is_dir, name.to_owned()));
 
             for (i, (name, node)) in items.iter().enumerate() {
                 let is_last = i == items.len() - 1;

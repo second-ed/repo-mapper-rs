@@ -78,16 +78,15 @@ repo-map-desc: Installation and simple docs
 │       ├── __init__.py
 │       └── __main__.py              # Main CLI entry point
 ├── src
-│   ├── core
-│   │   ├── domain
-│   │   │   ├── file_node.rs
+│   ├── core                         # the core rust code that does the work
+│   │   ├── domain                   # main domain objects handles pure transformations of the files
 │   │   │   ├── file_tree.rs
 │   │   │   ├── mod.rs
-│   │   │   ├── repo_file.rs
+│   │   │   ├── repo_entry.rs        # simple implementation of a repo object
 │   │   │   ├── ret_codes.rs
 │   │   │   ├── transform.rs         # Where the file tree is generated
 │   │   │   └── utils.rs
-│   │   ├── parsing
+│   │   ├── parsing                  # convert interactions with the outside world into something useful
 │   │   │   ├── args.rs
 │   │   │   ├── context.rs
 │   │   │   ├── file_text.rs
