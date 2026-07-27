@@ -65,6 +65,12 @@ repo-map-desc: Installation and simple docs
     - it will ignore any characters before `repo-map-desc:` (e.g. comments or code)
     - only apply to the first matching line per file
 
+### 0.5.0
+- `.repo-map-desc` files
+    - add a `.repo-map-desc` file in a directory with text matching the `repo-map-desc:` prefix to the file
+    - that description is then added to the dir on the repo-map
+    - only apply to the first matching line per file
+
 # Repo map
 ```
 ├── .github
