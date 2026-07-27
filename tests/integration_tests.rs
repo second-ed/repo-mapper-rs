@@ -11,6 +11,14 @@ use test_case::test_case;
 
 const ROOT: &str = "fake/repo/root";
 
+fn populate_file_sys(files: &[(&str, &str)]) -> FakeFileSystem {
+    let file_map = files
+        .iter()
+        .map(|(k, v)| (Path::new(ROOT).join(k), v.to_string()))
+        .collect::<HashMap<PathBuf, String>>();
+    FakeFileSystem::new(file_map)
+}
+
 #[test_case(
     "fake/repo/root/README.md", "fake/repo/root/.gitignore",
     vec!["rs", "md", "toml"],
@@ -110,7 +118,7 @@ fn test_modify_readme(
     expected_result: Result<RetCode, RetCode>,
     expected_readme: &str,
 ) {
-    let files = vec![
+    let files = [
         ("src/main.rs", "let x = 1;"),
         ("src/lib.rs", "use std;"),
         ("Cargo.toml", ""),
@@ -120,12 +128,9 @@ fn test_modify_readme(
         (".venv/site-packages/some_package.py", ""),
         ("scratch.py", ""),
         ("secrets/.env", ""),
-    ]
-    .into_iter()
-    .map(|(k, v)| (Path::new(ROOT).join(k), v.to_string()))
-    .collect::<HashMap<PathBuf, String>>();
+    ];
 
-    let mut file_sys = FakeFileSystem::new(files);
+    let mut file_sys = populate_file_sys(&files);
 
     let repo_root = ROOT.to_string();
     let readme_path = readme_path.to_string();
