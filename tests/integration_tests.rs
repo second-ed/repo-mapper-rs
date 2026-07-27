@@ -1,11 +1,15 @@
-use rayon::prelude::*;
 use repo_mapper_rs::core::{
     adapters::FakeFileSystem,
     domain::{ret_codes::RetCode, utils::to_collection_of_type},
     main,
 };
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 use test_case::test_case;
+
+const ROOT: &str = "fake/repo/root";
 
 #[test_case(
     "fake/repo/root/README.md", "fake/repo/root/.gitignore",
@@ -46,7 +50,7 @@ use test_case::test_case;
     true, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n├── scratch.py\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure return Ok(RetCode::ModifiedReadme) if it modifies the README"
 )]
 #[test_case(
@@ -57,7 +61,7 @@ use test_case::test_case;
     false, false,
     "# Some readme\n",
     Ok(RetCode::ModifiedReadme),
-    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n├── scratch.py\n└── src\n\n(generated with repo-mapper-rs)\n::\n```" ;
+    "# Some readme\n\n\n# Repo map\n```\n├── secrets\n│   └── .env\n├── .gitignore\n├── Cargo.toml\n├── README.md\n└── scratch.py\n\n(generated with repo-mapper-rs)\n::\n```" ;
     "Ensure does not skip hidden file"
 )]
 #[test_case(
@@ -107,25 +111,23 @@ fn test_modify_readme(
     expected_readme: &str,
 ) {
     let files = vec![
-        ("fake/repo/root/src/main.rs", "let x = 1;"),
-        ("fake/repo/root/src/lib.rs", "use std;"),
-        ("fake/repo/root/Cargo.toml", ""),
-        ("fake/repo/root/src", ""),
-        ("fake/repo/root/README.md", current_readme),
-        ("fake/repo/root/.gitignore", "target/"),
-        ("fake/repo/root/target/some_build.rs", ""),
-        ("fake/repo/root/.venv/site-packages/some_package.py", ""),
-        ("fake/repo/root/scratch.py", ""),
-        ("fake/repo/root/secrets/.env", ""),
+        ("src/main.rs", "let x = 1;"),
+        ("src/lib.rs", "use std;"),
+        ("Cargo.toml", ""),
+        ("README.md", current_readme),
+        (".gitignore", "target/"),
+        ("target/some_build.rs", ""),
+        (".venv/site-packages/some_package.py", ""),
+        ("scratch.py", ""),
+        ("secrets/.env", ""),
     ]
-    .into_par_iter()
-    .with_min_len(1_000)
-    .map(|(k, v)| (PathBuf::from(k), v.to_string()))
+    .into_iter()
+    .map(|(k, v)| (Path::new(ROOT).join(k), v.to_string()))
     .collect::<HashMap<PathBuf, String>>();
 
     let mut file_sys = FakeFileSystem::new(files);
 
-    let repo_root = "fake/repo/root".to_string();
+    let repo_root = ROOT.to_string();
     let readme_path = readme_path.to_string();
     let gitignore_path = gitignore_path.to_string();
     let allowed_exts: Vec<String> = to_collection_of_type(allowed_exts);
