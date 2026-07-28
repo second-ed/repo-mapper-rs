@@ -104,7 +104,7 @@ repo-map-desc: Installation and simple docs
 │   ├── api.rs                       # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
-│   └── integration_tests.rs
+│   └── integration_tests.rs         # component level integration tests using FakeFileSystem
 ├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml

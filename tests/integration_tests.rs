@@ -1,3 +1,5 @@
+// repo-map-desc: component level integration tests using FakeFileSystem
+
 use repo_mapper_rs::core::{
     adapters::FakeFileSystem,
     domain::{ret_codes::RetCode, utils::to_collection_of_type},
@@ -10,6 +12,21 @@ use std::{
 use test_case::test_case;
 
 const ROOT: &str = "fake/repo/root";
+
+fn standard_current_files(current_readme: &[&str]) -> FakeFileSystem {
+    let files = [
+        ("src/main.rs", "let x = 1;"),
+        ("src/lib.rs", "use std;"),
+        ("Cargo.toml", ""),
+        ("README.md", &current_readme.join("\n")),
+        (".gitignore", "target/"),
+        ("target/some_build.rs", ""),
+        (".venv/site-packages/some_package.py", ""),
+        ("scratch.py", ""),
+        ("secrets/.env", ""),
+    ];
+    populate_file_sys(&files)
+}
 
 fn populate_file_sys(files: &[(&str, &str)]) -> FakeFileSystem {
     let file_map = files
@@ -26,7 +43,6 @@ struct InputData {
     ignore_dirs: Vec<String>,
     ignore_hidden: bool,
     dirs_only: bool,
-    current_readme: String,
 }
 
 impl InputData {
@@ -37,13 +53,11 @@ impl InputData {
         ignore_dirs: Vec<&str>,
         ignore_hidden: bool,
         dirs_only: bool,
-        current_readme: &[&str],
     ) -> Self {
         let readme_path = format!("{ROOT}/{readme_path}");
         let gitignore_path = format!("{ROOT}/{gitignore_path}");
         let allowed_exts: Vec<String> = to_collection_of_type(allowed_exts);
         let ignore_dirs: Vec<String> = to_collection_of_type(ignore_dirs);
-        let current_readme = current_readme.join("\n");
 
         Self {
             readme_path,
@@ -52,7 +66,6 @@ impl InputData {
             ignore_dirs,
             ignore_hidden,
             dirs_only,
-            current_readme,
         }
     }
 }
@@ -72,7 +85,7 @@ impl ExpectedResult {
 }
 
 fn given_valid_input_data_when_called_then_should_not_modify_the_readme(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = [
         "# Some readme",
         "",
@@ -91,6 +104,7 @@ fn given_valid_input_data_when_called_then_should_not_modify_the_readme(
     ];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "README.md",
             ".gitignore",
@@ -98,14 +112,13 @@ fn given_valid_input_data_when_called_then_should_not_modify_the_readme(
             vec![".venv", "target"],
             true,
             false,
-            &current_readme,
         ),
         ExpectedResult::new(Ok(RetCode::NoModification), &current_readme),
     )
 }
 
 fn given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_readme(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = [
         "# Some readme",
         "",
@@ -136,6 +149,7 @@ fn given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_read
     ];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "README.md",
             ".gitignore",
@@ -143,14 +157,13 @@ fn given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_read
             vec![],
             false,
             true,
-            &current_readme,
         ),
         ExpectedResult::new(Ok(RetCode::ModifiedReadme), &expected_readme),
     )
 }
 
 fn given_empty_ignore_dirs_when_called_then_should_not_ignore_directories(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = [
         "# Some readme",
         "`",
@@ -190,6 +203,7 @@ fn given_empty_ignore_dirs_when_called_then_should_not_ignore_directories(
     ];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "README.md",
             ".gitignore",
@@ -197,14 +211,13 @@ fn given_empty_ignore_dirs_when_called_then_should_not_ignore_directories(
             vec![],
             true,
             false,
-            &current_readme,
         ),
         ExpectedResult::new(Ok(RetCode::ModifiedReadme), &expected_readme),
     )
 }
 
 fn given_ignored_directories_when_called_then_should_modify_the_readme(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
     let expected_readme = [
         "# Some readme",
@@ -222,6 +235,7 @@ fn given_ignored_directories_when_called_then_should_modify_the_readme(
     ];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "README.md",
             ".gitignore",
@@ -229,14 +243,13 @@ fn given_ignored_directories_when_called_then_should_modify_the_readme(
             vec![".venv", "src"],
             true,
             false,
-            &current_readme,
         ),
         ExpectedResult::new(Ok(RetCode::ModifiedReadme), &expected_readme),
     )
 }
 
 fn given_hidden_files_when_called_without_ignore_hidden_then_should_include_them(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
     let expected_readme = [
         "# Some readme",
@@ -257,6 +270,7 @@ fn given_hidden_files_when_called_without_ignore_hidden_then_should_include_them
     ];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "README.md",
             ".gitignore",
@@ -264,18 +278,18 @@ fn given_hidden_files_when_called_without_ignore_hidden_then_should_include_them
             vec![".venv", "src"],
             false,
             false,
-            &current_readme,
         ),
         ExpectedResult::new(Ok(RetCode::ModifiedReadme), &expected_readme),
     )
 }
 
 fn given_invalid_readme_filename_when_called_then_should_return_invalid_filename(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
     let expected_readme = ["# Some readme\n"];
 
     (
+        standard_current_files(&current_readme),
         InputData::new(
             "WRONG_README.txt",
             ".gitignore",
@@ -283,47 +297,112 @@ fn given_invalid_readme_filename_when_called_then_should_return_invalid_filename
             vec![],
             true,
             false,
-            &current_readme,
         ),
         ExpectedResult::new(Err(RetCode::InvalidFilename), &expected_readme),
     )
 }
 
 fn given_missing_readme_when_called_then_should_return_failed_parsing_file(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
     let expected_readme = ["# Some readme\n"];
 
     (
-        InputData::new(
-            "docs/README.md",
-            ".gitignore",
-            vec![],
-            vec![],
-            true,
-            false,
-            &current_readme,
-        ),
+        standard_current_files(&current_readme),
+        InputData::new("docs/README.md", ".gitignore", vec![], vec![], true, false),
         ExpectedResult::new(Err(RetCode::FailedParsingFile), &expected_readme),
     )
 }
 
 fn given_invalid_gitignore_filename_when_called_then_should_return_invalid_filename(
-) -> (InputData, ExpectedResult) {
+) -> (FakeFileSystem, InputData, ExpectedResult) {
     let current_readme = ["# Some readme\n"];
     let expected_readme = ["# Some readme\n"];
 
     (
-        InputData::new(
-            "README.md",
-            ".gitdonotignore",
-            vec![],
-            vec![],
-            true,
-            false,
-            &current_readme,
-        ),
+        standard_current_files(&current_readme),
+        InputData::new("README.md", ".gitdonotignore", vec![], vec![], true, false),
         ExpectedResult::new(Err(RetCode::InvalidFilename), &expected_readme),
+    )
+}
+
+fn given_a_file_sys_with_repo_map_desc_files_when_called_with_valid_input_data_then_should_populate_repo_map_with_descriptions(
+) -> (FakeFileSystem, InputData, ExpectedResult) {
+    let current_readme = ["# Some readme\n"];
+    let expected_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "├── src",
+        "│   ├── adapters  # adapters i/o operations",
+        "│   ├── domain    # where the domain objects are defined",
+        "│   └── main.rs   # the main entry point",
+        "├── Cargo.toml",
+        "└── README.md",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
+
+    let files = [
+        ("src/main.rs", "// repo-map-desc: the main entry point"),
+        (
+            "src/domain/.repo-map-desc",
+            "repo-map-desc: where the domain objects are defined",
+        ),
+        (
+            "src/adapters/.repo-map-desc",
+            "repo-map-desc: adapters i/o operations",
+        ),
+        ("Cargo.toml", ""),
+        ("README.md", &current_readme.join("\n")),
+        (".gitignore", "target/"),
+    ];
+    (
+        populate_file_sys(&files),
+        InputData::new("README.md", ".gitignore", vec![], vec![], true, false),
+        ExpectedResult::new(Ok(RetCode::ModifiedReadme), &expected_readme),
+    )
+}
+
+fn given_a_file_sys_with_repo_map_desc_files_when_called_with_dirs_only_then_should_populate_dirs_only_repo_map_with_descriptions(
+) -> (FakeFileSystem, InputData, ExpectedResult) {
+    let current_readme = [
+        "# Some readme",
+        "",
+        "",
+        "# Repo map",
+        "```",
+        "└── src",
+        "    ├── adapters  # adapters i/o operations",
+        "    └── domain    # where the domain objects are defined",
+        "",
+        "(generated with repo-mapper-rs)",
+        "::",
+        "```",
+    ];
+
+    let files = [
+        ("src/main.rs", "// repo-map-desc: the main entry point"),
+        (
+            "src/domain/.repo-map-desc",
+            "repo-map-desc: where the domain objects are defined",
+        ),
+        (
+            "src/adapters/.repo-map-desc",
+            "repo-map-desc: adapters i/o operations",
+        ),
+        ("Cargo.toml", ""),
+        ("README.md", &current_readme.join("\n")),
+        (".gitignore", "target/"),
+    ];
+    (
+        populate_file_sys(&files),
+        InputData::new("README.md", ".gitignore", vec![], vec![], true, true),
+        ExpectedResult::new(Ok(RetCode::NoModification), &current_readme),
     )
 }
 
@@ -359,23 +438,17 @@ fn given_invalid_gitignore_filename_when_called_then_should_return_invalid_filen
     given_invalid_gitignore_filename_when_called_then_should_return_invalid_filename() ;
     "Ensure Err(FAILURE) if not pointed to valid gitignore."
 )]
+#[test_case(
+    given_a_file_sys_with_repo_map_desc_files_when_called_with_valid_input_data_then_should_populate_repo_map_with_descriptions() ;
+    "Ensure adds descriptions correctly for all files"
+)]
+#[test_case(
+    given_a_file_sys_with_repo_map_desc_files_when_called_with_dirs_only_then_should_populate_dirs_only_repo_map_with_descriptions() ;
+    "Ensure adds descriptions correctly for dirs only"
+)]
 #[allow(clippy::needless_pass_by_value)]
-fn test_modify_readme(test_data: (InputData, ExpectedResult)) {
-    let (input_data, expected_result) = test_data;
-
-    let files = [
-        ("src/main.rs", "let x = 1;"),
-        ("src/lib.rs", "use std;"),
-        ("Cargo.toml", ""),
-        ("README.md", &input_data.current_readme),
-        (".gitignore", "target/"),
-        ("target/some_build.rs", ""),
-        (".venv/site-packages/some_package.py", ""),
-        ("scratch.py", ""),
-        ("secrets/.env", ""),
-    ];
-
-    let mut file_sys = populate_file_sys(&files);
+fn test_modify_readme(test_data: (FakeFileSystem, InputData, ExpectedResult)) {
+    let (mut file_sys, input_data, expected_result) = test_data;
 
     let repo_root = ROOT.to_string();
 
