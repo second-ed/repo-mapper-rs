@@ -36,7 +36,11 @@ pub fn main(
     );
 
     let gitignored_patterns = GitIgnore::parse(file_sys, &args.gitignore_path)?.parse_lines();
-    let paths: Vec<std::path::PathBuf> = file_sys.list_files(&args.context.repo_root);
+    let paths: Vec<std::path::PathBuf> = file_sys.list_files(
+        &args.context.repo_root,
+        &args.context.ignore_dirs,
+        args.context.ignore_hidden,
+    );
 
     let tree = pathbufs_to_filetree(
         file_sys,

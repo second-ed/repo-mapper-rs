@@ -65,6 +65,12 @@ repo-map-desc: Installation and simple docs
     - it will ignore any characters before `repo-map-desc:` (e.g. comments or code)
     - only apply to the first matching line per file
 
+### 0.5.0
+- `.repo-map-desc` files
+    - add a `.repo-map-desc` file in a directory with text matching the `repo-map-desc:` prefix to the file
+    - that description is then added to the dir on the repo-map
+    - only apply to the first matching line per file
+
 # Repo map
 ```
 ├── .github
@@ -78,16 +84,15 @@ repo-map-desc: Installation and simple docs
 │       ├── __init__.py
 │       └── __main__.py              # Main CLI entry point
 ├── src
-│   ├── core
-│   │   ├── domain
-│   │   │   ├── file_node.rs
+│   ├── core                         # the core rust code that does the work
+│   │   ├── domain                   # main domain objects handles pure transformations of the files
 │   │   │   ├── file_tree.rs
 │   │   │   ├── mod.rs
-│   │   │   ├── repo_file.rs
+│   │   │   ├── repo_entry.rs        # simple implementation of a repo object
 │   │   │   ├── ret_codes.rs
 │   │   │   ├── transform.rs         # Where the file tree is generated
 │   │   │   └── utils.rs
-│   │   ├── parsing
+│   │   ├── parsing                  # convert interactions with the outside world into something useful
 │   │   │   ├── args.rs
 │   │   │   ├── context.rs
 │   │   │   ├── file_text.rs
@@ -99,7 +104,7 @@ repo-map-desc: Installation and simple docs
 │   ├── api.rs                       # The translation layer between python and rust
 │   └── lib.rs
 ├── tests
-│   └── integration_tests.rs
+│   └── integration_tests.rs         # component level integration tests using FakeFileSystem
 ├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml

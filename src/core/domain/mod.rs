@@ -1,6 +1,5 @@
-pub(crate) mod file_node;
 pub mod file_tree;
-pub(crate) mod repo_file;
+pub(crate) mod repo_entry;
 pub mod ret_codes;
 pub mod transform;
 pub mod utils;
