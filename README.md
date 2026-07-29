@@ -77,7 +77,6 @@ repo-map-desc: Installation and simple docs
 │   └── repo_mapper_rs_benchmark.rs
 ├── python
 │   └── repo_mapper                  # the python CLI interface that calls the rust core
-│       ├── __pycache__
 │       ├── __init__.py
 │       └── __main__.py              # Main CLI entry point
 ├── src

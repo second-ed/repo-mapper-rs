@@ -30,7 +30,6 @@ pub fn pathbufs_to_filetree(
         .into_iter()
         .filter(|path| !is_ignored_dir(path, ignore_dirs))
         .filter(|path| is_allowed_ext(path, allowed_exts))
-        .filter(|path| !is_gitignored(path, gitignored_patterns))
         .filter(|path| !is_hidden(path, ignore_hidden))
         .filter(|path| path != root)
         .map(|path| {
@@ -43,6 +42,7 @@ pub fn pathbufs_to_filetree(
         .unique_by(PathBuf::clone)
         .map(|path| RepoEntry::new(file_sys, root, &path))
         .filter(|e| !e.path().to_str().is_some_and(str::is_empty))
+        .filter(|e| !is_gitignored(e.path(), e.is_dir(), gitignored_patterns))
         .collect::<Vec<RepoEntry>>();
 
     FileTree::from_repo_entries(&repo_files)
