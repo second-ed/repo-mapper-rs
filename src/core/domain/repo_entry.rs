@@ -112,21 +112,24 @@ pub(crate) fn is_ignored_dir(path: &Path, ignore_dirs: &HashSet<String>) -> bool
         .any(|name| ignore_dirs.contains(name))
 }
 
-pub(crate) fn is_gitignored(path: &Path, patterns: &[Regex]) -> bool {
-    let rel_str = path.to_string_lossy();
+pub(crate) fn is_gitignored(path: &Path, is_dir: bool, patterns: &[Regex]) -> bool {
+    let mut rel_str = path.to_string_lossy().into_owned();
+    if is_dir {
+        rel_str.push('/');
+    }
     patterns.iter().any(|re| re.is_match(&rel_str))
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashSet, path::Path};
-
     use crate::core::domain::{
         repo_entry::{
             extract_module_desc, is_allowed_ext, is_gitignored, is_hidden, is_ignored_dir,
         },
-        utils::to_collection_of_type,
+        utils::{to_collection_of_type, to_regex_vec},
     };
+    use regex::Regex;
+    use std::{collections::HashSet, path::Path};
     use test_case::test_case;
 
     #[allow(clippy::needless_pass_by_value)]
@@ -167,6 +170,23 @@ mod tests {
     fn test_is_ignored_dir(inp_path: &str, inp_ignored_dirs: Vec<&str>, expected_result: bool) {
         let ignored_dirs: HashSet<String> = to_collection_of_type(inp_ignored_dirs);
         let res = is_ignored_dir(Path::new(inp_path), &ignored_dirs);
+        assert_eq!(res, expected_result);
+    }
+
+    #[test_case("some/dir/__pycache__", true, vec!["(^|/)__pycache__/(.*)?$"], true ; "given a path and is_dir is true, when patterns includes '__pycache__/', then returns true")]
+    #[test_case("some/dir/file.log", false, vec!["(^|/)[^/]*\\.log$"], true ; "given a path that ends with .log and is_dir is false, when pattens includes '*.log', then returns true")]
+    #[test_case("some/dir/file.rs", false, vec!["(^|/)[^/]*\\.log$"], false ; "given a path that does not end with .log and is_dir is false, when pattens includes '*.log', then returns false")]
+    #[test_case("some/dir/scratch.py", false, vec!["(^|/)scratch[^/]*\\.py$"], true ; "given a path that exactly matches a pattern, when the function is called, then returns true" )]
+    #[test_case("some/dir/scratch_test.py", false, vec!["(^|/)scratch[^/]*\\.py$"], true ; "given a path that starts with a pattern, when the function is called, then returns true" )]
+    #[test_case("some/dir/scratch.rs", false, vec!["(^|/)scratch[^/]*\\.py$"], false ; "given a path does not match the pattern, when the function is called, then returns false" )]
+    fn test_is_gitignored(
+        inp_path: &str,
+        is_dir: bool,
+        inp_gitignore_patterns: Vec<&str>,
+        expected_result: bool,
+    ) {
+        let patterns: Vec<Regex> = to_regex_vec(inp_gitignore_patterns);
+        let res = is_gitignored(Path::new(inp_path), is_dir, &patterns);
         assert_eq!(res, expected_result);
     }
 }
