@@ -1,9 +1,9 @@
+use crate::core::domain::repo_entry::{is_hidden, is_ignored_dir};
 use std::{
     collections::{HashMap, HashSet},
     fs, io,
     path::{Path, PathBuf},
 };
-
 use walkdir::WalkDir;
 
 pub trait FileSystem {
@@ -116,20 +116,5 @@ impl FileSystem for FakeFileSystem {
 }
 
 fn continue_walking(path: &Path, ignore_dirs: &HashSet<String>, ignore_hidden: bool) -> bool {
-    let name = path.file_name().and_then(|name| name.to_str());
-
-    if is_hidden(ignore_hidden, name) || is_ignored_dir(ignore_dirs, name) {
-        return false;
-    }
-    true
-}
-
-#[inline]
-fn is_hidden(ignore_hidden: bool, name: Option<&str>) -> bool {
-    ignore_hidden && name.is_some_and(|name| name.starts_with('.'))
-}
-
-#[inline]
-fn is_ignored_dir(ignore_dirs: &HashSet<String>, name: Option<&str>) -> bool {
-    !ignore_dirs.is_empty() && name.is_some_and(|name| ignore_dirs.contains(name))
+    !(is_hidden(path, ignore_hidden) || is_ignored_dir(path, ignore_dirs))
 }
