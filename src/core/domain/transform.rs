@@ -32,6 +32,7 @@ pub fn pathbufs_to_filetree(
         .filter(|path| is_allowed_ext(path, allowed_exts))
         .filter(|path| !is_gitignored(path, gitignored_patterns))
         .filter(|path| !is_hidden(path, ignore_hidden))
+        .filter(|path| path != root)
         .map(|path| {
             if dirs_only {
                 path.parent().map(Path::to_path_buf).unwrap_or_default()

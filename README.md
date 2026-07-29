@@ -75,13 +75,11 @@ repo-map-desc: Installation and simple docs
 ```
 ├── benches
 │   └── repo_mapper_rs_benchmark.rs
-├── dist
 ├── python
-│   └── repo_mapper
+│   └── repo_mapper                  # the python CLI interface that calls the rust core
 │       ├── __pycache__
 │       ├── __init__.py
 │       └── __main__.py              # Main CLI entry point
-├── scrap
 ├── src
 │   ├── core                         # the core rust code that does the work
 │   │   ├── domain                   # main domain objects handles pure transformations of the files
