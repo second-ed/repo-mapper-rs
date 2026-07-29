@@ -141,6 +141,7 @@ fn given_valid_input_data_when_called_with_dirs_only_then_should_modify_the_read
         "```",
         "├── .venv",
         "│   └── site-packages",
+        "├── secrets",
         "└── src",
         "",
         "(generated with repo-mapper-rs)",

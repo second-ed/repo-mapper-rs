@@ -95,9 +95,10 @@ pub(crate) fn is_allowed_ext(path: &Path, allowed_exts: &HashSet<String>) -> boo
     if path.file_name().and_then(|name| name.to_str()) == Some(".repo-map-desc") {
         return true;
     }
-    path.extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| allowed_exts.contains(ext))
+    match path.extension() {
+        Some(s) => s.to_str().is_some_and(|ext| allowed_exts.contains(ext)),
+        None => true,
+    }
 }
 
 pub(crate) fn is_ignored_dir(path: &Path, ignore_dirs: &HashSet<String>) -> bool {
@@ -118,7 +119,14 @@ pub(crate) fn is_gitignored(path: &Path, patterns: &[Regex]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::domain::repo_entry::extract_module_desc;
+    use std::{collections::HashSet, path::Path};
+
+    use crate::core::domain::{
+        repo_entry::{
+            extract_module_desc, is_allowed_ext, is_gitignored, is_hidden, is_ignored_dir,
+        },
+        utils::to_collection_of_type,
+    };
     use test_case::test_case;
 
     #[allow(clippy::needless_pass_by_value)]
@@ -127,6 +135,38 @@ mod tests {
     #[test_case("let a = 1;", None)]
     fn test_extract_module_desc(code: &str, expected_result: Option<String>) {
         let res = extract_module_desc(code);
+        assert_eq!(res, expected_result);
+    }
+
+    #[test_case("some/public/path.rs", true, false ; "given public path when ignore hidden is true then returns false")]
+    #[test_case("some/public/path.rs", false, false ; "given public path when ignore hidden is false then returns false")]
+    #[test_case("some/hidden/.file.py", true, true ; "given hidden file when ignore hidden is true then returns true")]
+    #[test_case("some/hidden/.file.py", false, false ; "given hidden file when ignore hidden is false then returns false")]
+    #[test_case("some/hidden/.dir/nested.py", true, true ; "given hidden dir when ignore hidden is true then returns true")]
+    #[test_case("some/hidden/.dir/nested.py", false, false ; "given hidden dir when ignore hidden is false then returns false")]
+    fn test_is_hidden(inp_path: &str, ignore_hidden: bool, expected_result: bool) {
+        let res = is_hidden(Path::new(inp_path), ignore_hidden);
+        assert_eq!(res, expected_result);
+    }
+
+    #[test_case("some/public/path.rs", vec!["rs", "py"], true ; "given a rs source file, when called with allowed exts including rs, then returns true")]
+    #[test_case("some/public/path.rs", vec!["py"], false ; "given a rs source file, when called with allowed exts excluding rs, then returns false")]
+    #[test_case("some/public/.repo-map-desc", vec!["py"], true ; "given a .repo-map-desc, when called with allowed exts, then returns true")]
+    #[test_case("some/public/.repo-map-desc", vec![], true ; "given a .repo-map-desc, when called without allowed exts, then returns true")]
+    #[test_case("some/public/path/no/ext", vec!["py"], true ; "given a source file with no ext, when called with allowed exts, then returns true")]
+    fn test_is_allowed_ext(inp_path: &str, inp_allowed_exts: Vec<&str>, expected_result: bool) {
+        let allowed_exts: HashSet<String> = to_collection_of_type(inp_allowed_exts);
+        let res = is_allowed_ext(Path::new(inp_path), &allowed_exts);
+        assert_eq!(res, expected_result);
+    }
+
+    #[test_case("some/public/path.rs", vec!["other_dir"], false ; "given a public path, when the ignored_dirs vec does not include it, then returns false")]
+    #[test_case("some/ignored/path.rs", vec!["ignored"], true ; "given an ignored path, when the ignored_dirs vec does include it, then returns true")]
+    #[test_case("some/really/nested/ignored/deep/path.rs", vec!["ignored"], true ; "given a nested ignored path, when the ignored_dirs vec does include it, then returns true")]
+    #[test_case("some/random/path.rs", vec![], false ; "given any path, when the ignored_dirs vec is empty, then returns false")]
+    fn test_is_ignored_dir(inp_path: &str, inp_ignored_dirs: Vec<&str>, expected_result: bool) {
+        let ignored_dirs: HashSet<String> = to_collection_of_type(inp_ignored_dirs);
+        let res = is_ignored_dir(Path::new(inp_path), &ignored_dirs);
         assert_eq!(res, expected_result);
     }
 }

@@ -73,14 +73,11 @@ repo-map-desc: Installation and simple docs
 
 # Repo map
 ```
-├── .github
-│   └── workflows
-│       ├── ci.yaml
-│       └── publish.yaml
 ├── benches
 │   └── repo_mapper_rs_benchmark.rs
 ├── python
-│   └── repo_mapper
+│   └── repo_mapper                  # the python CLI interface that calls the rust core
+│       ├── __pycache__
 │       ├── __init__.py
 │       └── __main__.py              # Main CLI entry point
 ├── src
@@ -105,9 +102,9 @@ repo-map-desc: Installation and simple docs
 │   └── lib.rs
 ├── tests
 │   └── integration_tests.rs         # component level integration tests using FakeFileSystem
-├── .pre-commit-config.yaml
 ├── Cargo.lock
 ├── Cargo.toml
+├── LICENSE
 ├── README.md                        # Installation and simple docs
 ├── pyproject.toml
 └── uv.lock
