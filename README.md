@@ -71,6 +71,12 @@ repo-map-desc: Installation and simple docs
     - that description is then added to the dir on the repo-map
     - only apply to the first matching line per file
 
+#### Example
+(in `root/some_dir/.repo-map-desc`)
+```
+repo-map-desc: this is the description that shows up in the repo map for the some_dir directory
+```
+
 # Repo map
 ```
 ├── benches
