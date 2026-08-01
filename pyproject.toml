@@ -25,7 +25,7 @@ strip = true
 
 [tool.uv]
 # Rebuild package when any rust files change
-cache-keys = [{file = "pyproject.toml"}, {file = "rust/Cargo.toml"}, {file = "**/*.rs"}]
+cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}, {file = "Cargo.lock"}]
 
 [tool.uv.sources]
 repo-mapper-rs = { workspace = true }
