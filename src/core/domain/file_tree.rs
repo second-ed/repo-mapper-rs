@@ -61,7 +61,12 @@ impl FileTree {
             let mut items: Vec<_> = tree.iter().collect();
 
             // Sort directories before files
-            items.sort_by_key(|(name, node)| (!node.is_dir, name.to_owned()));
+            items.sort_unstable_by(|(a_name, a_node), (b_name, b_node)| {
+                b_node
+                    .is_dir
+                    .cmp(&a_node.is_dir)
+                    .then_with(|| a_name.cmp(b_name))
+            });
 
             for (i, (name, node)) in items.iter().enumerate() {
                 let is_last = i == items.len() - 1;
