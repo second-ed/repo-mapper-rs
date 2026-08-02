@@ -377,9 +377,10 @@ fn given_a_file_sys_with_repo_map_desc_files_when_called_with_dirs_only_then_sho
         "",
         "# Repo map",
         "```",
-        "└── src",
-        "    ├── adapters  # adapters i/o operations",
-        "    └── domain    # where the domain objects are defined",
+        "├── src",
+        "│   ├── adapters  # adapters i/o operations",
+        "│   └── domain    # where the domain objects are defined",
+        "└── tests",
         "",
         "(generated with repo-mapper-rs)",
         "::",
@@ -396,13 +397,14 @@ fn given_a_file_sys_with_repo_map_desc_files_when_called_with_dirs_only_then_sho
             "src/adapters/.repo-map-desc",
             "repo-map-desc: adapters i/o operations",
         ),
+        ("tests/some_file.rs", ""),
         ("Cargo.toml", ""),
         ("README.md", &current_readme.join("\n")),
         (".gitignore", "target/"),
     ];
     (
         populate_file_sys(&files),
-        InputData::new("README.md", ".gitignore", vec![], vec![], true, true),
+        InputData::new("README.md", ".gitignore", vec!["py"], vec![], true, true),
         ExpectedResult::new(Ok(RetCode::NoModification), &current_readme),
     )
 }

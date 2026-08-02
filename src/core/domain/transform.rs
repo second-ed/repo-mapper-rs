@@ -29,7 +29,13 @@ pub fn pathbufs_to_filetree(
     let repo_files = paths
         .into_iter()
         .filter(|path| !is_ignored_dir(path, ignore_dirs))
-        .filter(|path| is_allowed_ext(path, allowed_exts))
+        .filter(|path| {
+            if dirs_only {
+                true
+            } else {
+                is_allowed_ext(path, allowed_exts)
+            }
+        })
         .filter(|path| !is_hidden(path, ignore_hidden))
         .filter(|path| path != root)
         .map(|path| {
