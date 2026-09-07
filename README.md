@@ -88,7 +88,6 @@ repo-map-desc: this is the description that shows up in the repo map for the som
 ├── src
 │   ├── core                         # the core rust code that does the work
 │   │   ├── domain                   # main domain objects handles pure transformations of the files
-│   │   │   ├── file_tree.rs
 │   │   │   ├── mod.rs
 │   │   │   ├── render.rs
 │   │   │   ├── repo_entry.rs        # simple implementation of a repo object
