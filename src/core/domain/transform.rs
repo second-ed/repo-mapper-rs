@@ -2,10 +2,7 @@
 
 use crate::core::{
     adapters::FileSystem,
-    domain::{
-        file_tree::FileTree,
-        repo_entry::{is_allowed_ext, is_gitignored, is_hidden, is_ignored_dir, RepoEntry},
-    },
+    domain::repo_entry::{is_allowed_ext, is_gitignored, is_hidden, is_ignored_dir, RepoEntry},
 };
 use itertools::Itertools;
 use regex::Regex;
@@ -16,7 +13,7 @@ use std::{
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::implicit_hasher)]
-pub fn pathbufs_to_filetree(
+pub(crate) fn pathbufs_to_repo_entries(
     file_sys: &mut impl FileSystem,
     paths: Vec<PathBuf>,
     root: &Path,
@@ -25,8 +22,8 @@ pub fn pathbufs_to_filetree(
     gitignored_patterns: &[Regex],
     ignore_hidden: bool,
     dirs_only: bool,
-) -> FileTree {
-    let repo_files = paths
+) -> Vec<RepoEntry> {
+    paths
         .into_iter()
         .filter(|path| !is_ignored_dir(path, ignore_dirs))
         .filter(|path| {
@@ -45,11 +42,9 @@ pub fn pathbufs_to_filetree(
                 path
             }
         })
-        .unique_by(PathBuf::clone)
         .map(|path| RepoEntry::new(file_sys, root, &path))
+        .unique()
         .filter(|e| !e.path().to_str().is_some_and(str::is_empty))
         .filter(|e| !is_gitignored(e.path(), e.is_dir(), gitignored_patterns))
-        .collect::<Vec<RepoEntry>>();
-
-    FileTree::from_repo_entries(&repo_files)
+        .collect::<Vec<RepoEntry>>()
 }
