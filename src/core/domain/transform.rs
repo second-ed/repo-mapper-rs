@@ -13,7 +13,7 @@ use std::{
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::implicit_hasher)]
-pub(crate) fn pathbufs_to_repo_entries(
+pub fn pathbufs_to_repo_entries(
     file_sys: &mut impl FileSystem,
     paths: Vec<PathBuf>,
     root: &Path,

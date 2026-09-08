@@ -1,20 +1,38 @@
 use crate::core::domain::repo_entry::RepoEntry;
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
-use std::{cmp::Ordering, path::Component};
+use std::{
+    cmp::{max, Ordering},
+    path::Component,
+};
 use unicode_width::UnicodeWidthStr;
 
-pub(crate) fn generate_repo_map(mut repo_entries: Vec<RepoEntry>) -> String {
+pub fn generate_repo_map(mut repo_entries: Vec<RepoEntry>) -> String {
     repo_entries.sort_unstable_by(cmp_entries);
 
-    let render_objects = repo_entries_to_render_entries(&repo_entries)
-        .into_par_iter()
-        .with_min_len(1_000)
-        .map(render_entry_to_render_object)
-        .collect::<Vec<RenderObject>>();
+    let is_lasts = calculate_is_last(&repo_entries);
 
-    render_repo_map(render_objects)
+    let (objects, max_width) = populate_render_objects(&repo_entries, &is_lasts);
+
+    let mut lines_with_descs = objects
+        .into_iter()
+        .map(|obj| {
+            let line = obj.line;
+            match obj.desc {
+                Some(desc) => {
+                    let width = UnicodeWidthStr::width(line.as_str());
+                    let padding = max_width - width;
+
+                    format!("{line}{}  # {desc}", " ".repeat(padding))
+                }
+                None => line,
+            }
+        })
+        .collect::<Vec<String>>();
+
+    lines_with_descs.push("\n(generated with repo-mapper-rs)".to_string());
+    format!("# Repo map\n```\n{}\n::\n```", lines_with_descs.join("\n"))
 }
 
+#[inline]
 fn cmp_entries(a: &RepoEntry, b: &RepoEntry) -> Ordering {
     let a_components: Vec<_> = a.path().components().collect();
     let b_components: Vec<_> = b.path().components().collect();
@@ -31,7 +49,6 @@ fn cmp_entries(a: &RepoEntry, b: &RepoEntry) -> Ordering {
             .cmp(&a_is_dir) // directories first
             .then_with(|| a_component.as_os_str().cmp(b_component.as_os_str()));
     }
-
     a_components.len().cmp(&b_components.len())
 }
 
@@ -44,58 +61,58 @@ fn component_is_dir(entry: &RepoEntry, components: &[Component<'_>], i: usize) -
 }
 
 #[inline]
-fn repo_entries_to_render_entries(repo_entries: &[RepoEntry]) -> Vec<RenderEntry> {
-    let is_last = calculate_is_last(repo_entries);
+fn populate_render_objects(
+    repo_entries: &[RepoEntry],
+    is_lasts: &[bool],
+) -> (Vec<RenderObject>, usize) {
+    let mut render_objects: Vec<RenderObject> = Vec::with_capacity(repo_entries.len());
+    let mut continuations: Vec<bool> = Vec::new();
 
-    let mut result = Vec::with_capacity(repo_entries.len());
-    let mut ancestors: Vec<bool> = Vec::new();
+    let mut max_width: usize = 2;
 
-    for (i, entry) in repo_entries.iter().enumerate() {
-        let path = entry.path();
-        let depth = path.components().count() - 1;
-        ancestors.truncate(depth);
+    for (index, entry) in repo_entries.iter().enumerate() {
+        let depth = entry.path().components().count() - 1;
 
-        let continuations = ancestors
-            .iter()
-            .enumerate()
-            .fold(0u64, |bits, (level, &ancestor_is_last)| {
-                bits | (u64::from(!ancestor_is_last) << level)
-            });
+        continuations.truncate(depth);
+        let prefix = continuation_to_prefix(&continuations);
+        continuations.push(!is_lasts[index]);
 
-        let entry_is_last = is_last[i];
-
-        let info = RenderInfo {
-            name: path.file_name().unwrap().to_string_lossy().into_owned(),
-            desc: entry.desc().map(str::to_owned),
-            continuations,
+        let render_type = match (entry.is_dir(), is_lasts[index]) {
+            (true, true) => RenderType::LastDir.as_str(),
+            (true, false) => RenderType::Dir.as_str(),
+            (false, true) => RenderType::LastFile.as_str(),
+            (false, false) => RenderType::File.as_str(),
         };
 
-        result.push(match (entry.is_dir(), entry_is_last) {
-            (true, true) => RenderEntry::LastDir(info),
-            (true, false) => RenderEntry::Dir(info),
-            (false, true) => RenderEntry::LastFile(info),
-            (false, false) => RenderEntry::File(info),
-        });
+        let name = entry
+            .path()
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
 
-        ancestors.push(entry_is_last);
+        let line = format!("{prefix}{render_type}{name}");
+
+        max_width = max(max_width, UnicodeWidthStr::width(line.as_str()));
+        render_objects.push(RenderObject::new(line, entry.desc().map(str::to_owned)));
     }
 
-    result
+    (render_objects, max_width)
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
-struct RenderInfo {
-    name: String,
-    desc: Option<String>,
-    continuations: u64,
-}
-
-#[derive(Debug)]
-enum RenderEntry {
-    Dir(RenderInfo),
-    File(RenderInfo),
-    LastDir(RenderInfo),
-    LastFile(RenderInfo),
+#[inline]
+fn continuation_to_prefix(continuations: &[bool]) -> String {
+    continuations
+        .iter()
+        .map(
+            |has_next_sibling| {
+                if *has_next_sibling {
+                    "│   "
+                } else {
+                    "    "
+                }
+            },
+        )
+        .collect()
 }
 
 #[derive(Debug)]
@@ -104,88 +121,48 @@ struct RenderObject {
     desc: Option<String>,
 }
 
-#[inline]
-fn render_entry_to_render_object(entry: RenderEntry) -> RenderObject {
-    let (name, desc, continuations, connector) = match entry {
-        RenderEntry::Dir(info) | RenderEntry::File(info) => {
-            (info.name, info.desc, info.continuations, "├── ")
+impl RenderObject {
+    fn new(line: String, desc: Option<String>) -> Self {
+        Self { line, desc }
+    }
+}
+
+#[derive(Debug)]
+enum RenderType {
+    Dir,
+    File,
+    LastDir,
+    LastFile,
+}
+
+impl RenderType {
+    pub(crate) const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Dir | Self::File => "├── ",
+            Self::LastDir | Self::LastFile => "└── ",
         }
-        RenderEntry::LastDir(info) | RenderEntry::LastFile(info) => {
-            (info.name, info.desc, info.continuations, "└── ")
-        }
-    };
-
-    let depth = if continuations == 0 {
-        0
-    } else {
-        continuations.ilog2() + 1
-    };
-
-    let prefix: String = (0..depth)
-        .map(|level| {
-            if continuations & (1 << level) != 0 {
-                "│   "
-            } else {
-                "    "
-            }
-        })
-        .collect();
-
-    RenderObject {
-        line: format!("{prefix}{connector}{name}"),
-        desc,
     }
 }
 
 #[inline]
 fn calculate_is_last(entries: &[RepoEntry]) -> Vec<bool> {
-    let mut result = vec![true; entries.len()];
-    let mut next_sibling_at_depth = Vec::<usize>::new();
+    let mut is_last = vec![true; entries.len()];
+    let mut last_at_depth: Vec<usize> = Vec::new();
 
-    for i in (0..entries.len()).rev() {
-        let path = entries[i].path();
-        let depth = path.components().count() - 1;
+    for (i, entry) in entries.iter().enumerate() {
+        let depth = entry.path().components().count() - 1;
 
-        if let Some(&next) = next_sibling_at_depth.get(depth) {
-            result[i] = entries[next].path().parent() != path.parent();
+        if let Some(&previous) = last_at_depth.get(depth) {
+            if entries[previous].path().parent() == entry.path().parent() {
+                is_last[previous] = false;
+            }
         }
 
-        if next_sibling_at_depth.len() <= depth {
-            next_sibling_at_depth.resize(depth + 1, i);
+        if last_at_depth.len() <= depth {
+            last_at_depth.resize(depth + 1, i);
         } else {
-            next_sibling_at_depth[depth] = i;
+            last_at_depth[depth] = i;
         }
     }
-
-    result
-}
-
-#[inline]
-fn render_repo_map(objects: Vec<RenderObject>) -> String {
-    let max_width = objects
-        .iter()
-        .map(|object| UnicodeWidthStr::width(object.line.as_str()))
-        .max()
-        .unwrap_or(40);
-
-    let mut lines = objects
-        .into_par_iter()
-        .with_min_len(1_000)
-        .map(|object| {
-            let RenderObject { line, desc } = object;
-
-            match desc {
-                Some(desc) => {
-                    let width = UnicodeWidthStr::width(line.as_str());
-                    let padding = max_width - width;
-
-                    format!("{line}{}  # {desc}", " ".repeat(padding))
-                }
-                None => line,
-            }
-        })
-        .collect::<Vec<_>>();
-
-    lines.push("\n(generated with repo-mapper-rs)".to_string());
-    format!("# Repo map\n```\n{}\n::\n```", lines.join("\n"))
+    is_last
 }

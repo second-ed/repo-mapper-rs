@@ -9,7 +9,7 @@ use std::{
 };
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
-pub(crate) enum RepoEntry {
+pub enum RepoEntry {
     File { path: PathBuf, desc: Option<String> },
     Dir { path: PathBuf, desc: Option<String> },
 }
