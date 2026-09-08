@@ -81,21 +81,36 @@ impl FileSystem for FakeFileSystem {
         ignore_dirs: &HashSet<String>,
         ignore_hidden: bool,
     ) -> Vec<PathBuf> {
-        let mut files = vec![path.as_ref().to_path_buf()];
-        files.extend(
-            self.files
-                .keys()
-                .filter(|p| {
-                    p.starts_with(&path)
-                        && p.parent()
-                            .into_iter()
-                            .flat_map(Path::ancestors)
-                            .all(|parent| continue_walking(parent, ignore_dirs, ignore_hidden))
-                })
-                .cloned()
-                .collect::<Vec<PathBuf>>(),
-        );
-        files
+        let root = path.as_ref();
+        let mut paths = HashSet::from([root.to_path_buf()]);
+
+        self.files
+            .keys()
+            .filter(|file| {
+                file.starts_with(root)
+                    && file
+                        .parent()
+                        .into_iter()
+                        .flat_map(Path::ancestors)
+                        .all(|parent| continue_walking(parent, ignore_dirs, ignore_hidden))
+            })
+            .for_each(|file| {
+                paths.insert(file.clone());
+
+                if !is_hidden(file, ignore_hidden) {
+                    file.ancestors()
+                        .take_while(|ancestor| *ancestor != root)
+                        .filter(|ancestor| {
+                            ancestor.starts_with(root)
+                                && continue_walking(ancestor, ignore_dirs, ignore_hidden)
+                        })
+                        .for_each(|ancestor| {
+                            paths.insert(ancestor.to_path_buf());
+                        });
+                }
+            });
+
+        paths.into_iter().collect()
     }
 
     fn is_file(&self, path: &Path) -> bool {

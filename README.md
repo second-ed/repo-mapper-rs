@@ -80,6 +80,10 @@ repo-map-desc: this is the description that shows up in the repo map for the som
 # Repo map
 ```
 ├── benches
+│   ├── core
+│   │   └── domain
+│   │       ├── mod.rs               # basic data creation for benches
+│   │       └── render.rs
 │   └── repo_mapper_rs_benchmark.rs
 ├── python
 │   └── repo_mapper                  # the python CLI interface that calls the rust core
@@ -88,8 +92,8 @@ repo-map-desc: this is the description that shows up in the repo map for the som
 ├── src
 │   ├── core                         # the core rust code that does the work
 │   │   ├── domain                   # main domain objects handles pure transformations of the files
-│   │   │   ├── file_tree.rs
 │   │   │   ├── mod.rs
+│   │   │   ├── render.rs
 │   │   │   ├── repo_entry.rs        # simple implementation of a repo object
 │   │   │   ├── ret_codes.rs
 │   │   │   ├── transform.rs         # Where the file tree is generated
