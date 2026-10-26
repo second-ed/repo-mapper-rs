@@ -6,6 +6,9 @@ use repo_mapper_rs::core::{
 use std::hint::black_box;
 use std::{collections::HashMap, path::PathBuf};
 
+#[path = "core/domain/mod.rs"]
+mod render_benchmarks;
+
 fn criterion_benchmark(c: &mut Criterion) {
     let repo_root = "fake/repo/root".to_string();
     let readme_path = "fake/repo/root/README.md".to_string();
@@ -52,4 +55,5 @@ fn criterion_benchmark(c: &mut Criterion) {
 }
 
 criterion_group!(benches, criterion_benchmark);
-criterion_main!(benches);
+criterion_group!(render_benches, render_benchmarks::render::benchmark);
+criterion_main!(benches, render_benches);

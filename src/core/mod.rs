@@ -3,7 +3,7 @@ pub mod domain;
 pub mod parsing;
 use crate::core::{
     adapters::FileSystem,
-    domain::{ret_codes::RetCode, transform::pathbufs_to_filetree},
+    domain::{render::generate_repo_map, ret_codes::RetCode, transform::pathbufs_to_repo_entries},
     parsing::{
         args::{Args, OutputMode},
         gitignore::GitIgnore,
@@ -42,7 +42,7 @@ pub fn main(
         args.context.ignore_hidden,
     );
 
-    let tree = pathbufs_to_filetree(
+    let repo_entries = pathbufs_to_repo_entries(
         file_sys,
         paths,
         &args.context.repo_root,
@@ -56,7 +56,7 @@ pub fn main(
     match args.output_mode {
         OutputMode::Readme => {
             let readme = ReadMe::parse(file_sys, &args.readme_path)?;
-            let modified_readme = readme.update_readme(tree.render());
+            let modified_readme = readme.update_readme(generate_repo_map(repo_entries));
 
             if modified_readme == readme {
                 println!("{}", "Nothing to modify".green().bold());
@@ -74,7 +74,7 @@ pub fn main(
             Ok(RetCode::ModifiedReadme)
         }
         OutputMode::Shell => {
-            println!("{}", tree.render());
+            println!("{}", generate_repo_map(repo_entries));
             Ok(RetCode::NoModification)
         }
     }
